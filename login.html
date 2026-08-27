@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · TBH People Console</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#160E2E; --violet:#7C3AED; --pink:#FF2D8B; --lime:#C4F82A;
+  --cyan:#12D9E8; --tang:#FF7A2F; --sun:#FFCE1F; --muted:#6B5E8C; --paper:#F3EFFF;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:Outfit,system-ui,sans-serif;color:var(--ink);background:var(--paper);overflow:hidden}
+
+.shell{display:grid;grid-template-columns:1.05fr .95fr;height:100vh}
+
+/* ---------- LEFT : brand stage ---------- */
+.stage{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:34px 42px;
+  background:linear-gradient(125deg,#7C3AED,#B429D4 34%,#FF2D8B 66%,#FF7A2F);background-size:280% 280%;animation:drift 16s ease infinite;border-right:5px solid var(--ink)}
+@keyframes drift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.blob{position:absolute;border-radius:50%;filter:blur(14px);pointer-events:none}
+.b1{width:400px;height:400px;background:var(--lime);opacity:.34;top:-150px;right:-120px;animation:bob 10s ease-in-out infinite}
+.b2{width:280px;height:280px;background:var(--cyan);opacity:.30;bottom:-110px;left:-90px;animation:bob 13s ease-in-out infinite reverse}
+@keyframes bob{0%,100%{transform:translate(0,0)}50%{transform:translate(26px,-32px)}}
+
+.logo{display:flex;align-items:center;gap:13px;position:relative;z-index:3}
+.mark{width:50px;height:50px;border-radius:16px;background:var(--lime);border:3.5px solid var(--ink);box-shadow:4px 4px 0 var(--ink);
+  display:grid;place-items:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:23px}
+.logo b{font-family:'Space Grotesk',sans-serif;font-size:21px;color:#fff;display:block;line-height:1.1}
+.logo small{display:block;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.82);font-weight:700;margin-top:3px}
+
+.big{position:relative;z-index:3}
+.big h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(34px,4.4vw,58px);line-height:1.02;color:#fff;margin:0;letter-spacing:-.035em;
+  text-shadow:4px 4px 0 rgba(22,14,46,.3)}
+.big h1 em{font-style:normal;background:var(--lime);color:var(--ink);padding:0 12px;border-radius:12px;border:4px solid var(--ink);
+  display:inline-block;transform:rotate(-2deg);text-shadow:none;box-shadow:5px 5px 0 rgba(22,14,46,.45)}
+.stickers{display:flex;gap:9px;flex-wrap:wrap;margin-top:26px}
+.stk{background:#fff;border:3px solid var(--ink);border-radius:99px;padding:7px 15px;font-weight:800;font-size:12.5px;box-shadow:3px 3px 0 var(--ink)}
+.stk:nth-child(1){transform:rotate(-2.5deg)}
+.stk:nth-child(2){transform:rotate(1.5deg);background:var(--sun)}
+.stk:nth-child(3){transform:rotate(-1deg);background:var(--cyan)}
+
+.marquee{position:relative;z-index:3;background:var(--ink);border:3px solid var(--ink);border-radius:99px;overflow:hidden;padding:9px 0}
+.marquee div{display:inline-block;white-space:nowrap;color:var(--lime);font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+  animation:slide 22s linear infinite;padding-left:100%}
+@keyframes slide{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+
+/* ---------- RIGHT : form ---------- */
+.form-side{display:grid;place-items:center;padding:26px;overflow:auto;
+  background:radial-gradient(circle at 20% 15%,rgba(124,58,237,.09),transparent 45%),radial-gradient(circle at 85% 80%,rgba(255,45,139,.09),transparent 45%)}
+.box{width:100%;max-width:400px;animation:drop .55s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes drop{from{opacity:0;transform:translateY(-24px) rotate(-1.5deg)}to{opacity:1;transform:none}}
+.box.shake{animation:shake .42s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-11px) rotate(-1deg)}40%{transform:translateX(11px) rotate(1deg)}60%{transform:translateX(-7px)}80%{transform:translateX(7px)}}
+
+.bear{width:74px;height:74px;border-radius:22px;background:var(--lime);border:4px solid var(--ink);box-shadow:5px 5px 0 var(--ink);
+  display:grid;place-items:center;font-size:37px;margin-bottom:18px;cursor:pointer;transition:.2s;user-select:none}
+.bear:hover{transform:rotate(-10deg) scale(1.09)}
+.bear.peek{background:var(--pink)}
+h2{font-family:'Space Grotesk',sans-serif;font-size:29px;margin:0 0 5px;letter-spacing:-.03em;line-height:1.12}
+.sub{color:var(--muted);font-size:14px;margin:0 0 24px;font-weight:600;min-height:21px}
+label{display:block;font:800 10.5px Outfit,sans-serif;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
+.field{position:relative;margin-bottom:16px}
+input{width:100%;border:3.5px solid var(--ink);border-radius:16px;padding:14px 16px;font:600 15px Outfit,sans-serif;background:#fff;color:var(--ink);transition:.14s}
+input:focus{outline:none;box-shadow:5px 5px 0 var(--violet)}
+#pw{padding-right:56px}
+.eye{position:absolute;right:10px;top:33px;border:3px solid var(--ink);background:#fff;width:38px;height:38px;border-radius:12px;
+  cursor:pointer;font-size:16px;line-height:1;box-shadow:2px 2px 0 var(--ink)}
+.eye:hover{background:var(--lime)}
+.go{width:100%;border:4px solid var(--ink);background:var(--lime);color:var(--ink);padding:15px;border-radius:99px;
+  font:900 16px Outfit,sans-serif;cursor:pointer;box-shadow:6px 6px 0 var(--ink);transition:.13s;margin-top:5px}
+.go:hover:not(:disabled){transform:translate(-3px,-3px);box-shadow:9px 9px 0 var(--ink)}
+.go:active:not(:disabled){transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+.go:disabled{opacity:.6;cursor:wait}
+.row{display:flex;justify-content:flex-end;margin:-8px 0 18px}
+.link{background:none;border:none;color:var(--violet);font:700 12.5px Outfit,sans-serif;cursor:pointer;padding:0;text-decoration:underline dotted}
+.link:hover{color:var(--pink)}
+.msg{display:none;margin-top:16px;padding:13px 15px;border-radius:16px;font-size:13.5px;font-weight:700;border:3.5px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
+.msg.on{display:block;animation:drop .3s}
+.msg.bad{background:#FFE3F0;color:#A3005C}
+.msg.good{background:#EAFCBF;color:#3F5C00}
+.foot{text-align:center;margin-top:24px;font:800 10px Outfit,sans-serif;letter-spacing:.2em;color:var(--muted)}
+
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr;grid-template-rows:auto 1fr;height:auto;min-height:100vh}
+  body{overflow:auto}
+  .stage{padding:22px 24px 26px;gap:20px;border-right:none;border-bottom:5px solid var(--ink)}
+  .big h1{font-size:32px}.stickers{margin-top:16px}
+  .form-side{padding:30px 22px 44px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="stage">
+    <div class="blob b1"></div><div class="blob b2"></div>
+    <div class="logo"><div class="mark">B</div><div><b>The Bear House</b><small>People Console</small></div></div>
+    <div class="big">
+      <h1>Only <em>bears</em><br>beyond this<br>point.</h1>
+      <div class="stickers">
+        <span class="stk">🐻 Headcount</span>
+        <span class="stk">📍 Store level</span>
+        <span class="stk">⏳ Tenure bands</span>
+      </div>
+    </div>
+    <div class="marquee"><div>HEADCOUNT · GENDER MIX · TENURE BANDS · SENIORITY SPLIT · STORE MANNING · HQ FUNCTIONS · HEADCOUNT · GENDER MIX · TENURE BANDS · SENIORITY SPLIT · STORE MANNING · HQ FUNCTIONS ·&nbsp;</div></div>
+  </div>
+
+  <div class="form-side">
+    <div class="box" id="box">
+      <div class="bear" id="bear" title="poke me">🐻</div>
+      <h2>Show us your paw.</h2>
+      <p class="sub" id="sub">And your password. Mostly the password.</p>
+
+      <div class="field">
+        <label for="em">Work email</label>
+        <input id="em" type="email" autocomplete="username" placeholder="you@thebearhouse.in" spellcheck="false">
+      </div>
+
+      <div class="field">
+        <label for="pw">Password</label>
+        <input id="pw" type="password" autocomplete="current-password" placeholder="................">
+        <button class="eye" id="eye" type="button" title="Show password">👁</button>
+      </div>
+
+      <div class="row"><button class="link" id="reset">Forgot it? Happens to the best bears.</button></div>
+
+      <button class="go" id="go">Let me in 🍯</button>
+      <div class="msg" id="msg"></div>
+      <div class="foot">AUTHORISED BEARS ONLY</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- Plain UI. Wired immediately so the page is never dead, even if Firebase is slow or blocked. ---------- */
+const $ = s => document.querySelector(s);
+function say(t,k){ const m=$('#msg'); m.textContent=t; m.className='msg on '+k; }
+function nope(t){ say(t,'bad'); const b=$('#box'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+
+$('#pw').addEventListener('focus', ()=>{ $('#bear').textContent='\u{1F648}'; $('#bear').classList.add('peek'); });
+$('#pw').addEventListener('blur',  ()=>{ $('#bear').textContent='\u{1F43B}'; $('#bear').classList.remove('peek'); });
+
+const quips=['Still just a bear.','Try the honey button.','No, I do not know your password.','Bear fact: bears cannot read.','Stop poking. Start typing.','Ask HR, not the bear.'];
+let poke=0;
+$('#bear').onclick=()=>{ $('#sub').textContent=quips[poke++ % quips.length]; };
+
+$('#eye').onclick=()=>{ const p=$('#pw'), show=p.type==='password';
+  p.type=show?'text':'password'; $('#eye').textContent=show?'\u{1FAE3}':'\u{1F441}'; p.focus(); };
+
+$('#em').onkeydown=e=>{ if(e.key==='Enter') $('#pw').focus(); };
+$('#pw').onkeydown=e=>{ if(e.key==='Enter') go(); };
+function go(){ window.__signIn ? window.__signIn() : nope('Still waking up the bear. Give it a second and try again.'); }
+$('#go').onclick=go;
+$('#reset').onclick=()=>{ window.__reset ? window.__reset() : nope('Still waking up the bear. Give it a second.'); };
+</script>
+
+<script type="module">
+/* ---------- Firebase, loaded on its own so a blocked CDN cannot break the form ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyAnBRk_EzjEkXGN6Yeh7HrJa-6iNNZb0-g",
+  authDomain: "hr-dashboard-ad102.firebaseapp.com",
+  projectId: "hr-dashboard-ad102",
+  storageBucket: "hr-dashboard-ad102.firebasestorage.app",
+  messagingSenderId: "494269148327",
+  appId: "1:494269148327:web:562d56ff66064e25ae7f82"
+};
+
+const FRIENDLY={
+  'auth/invalid-credential':'That paw does not match. Check the email and password.',
+  'auth/invalid-email':'That email address is not shaped like an email address.',
+  'auth/user-disabled':'This account has been switched off. Talk to HR.',
+  'auth/user-not-found':'No bear by that name \u2014 HR has to create the account first.',
+  'auth/wrong-password':'Wrong password. The bear remains unimpressed.',
+  'auth/too-many-requests':'Too many tries. The bear is napping \u2014 try again in a few minutes.',
+  'auth/network-request-failed':'No connection to Firebase. Check the internet.',
+  'auth/unauthorized-domain':'This web address is not in the Firebase Authorized domains list yet.',
+  'auth/operation-not-allowed':'Email/Password sign-in is not switched on in the Firebase console yet.'
+};
+
+try{
+  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+  const { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged,
+          setPersistence, browserLocalPersistence }
+    = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+
+  const auth = getAuth(initializeApp(firebaseConfig));
+  try{ await setPersistence(auth, browserLocalPersistence); }catch(e){ /* private browsing: session-only is fine */ }
+
+  onAuthStateChanged(auth, u => { if (u) location.replace('index.html'); });
+
+  window.__signIn = async function(){
+    const em=$('#em').value.trim(), pw=$('#pw').value;
+    if(!em || !pw) return nope('Both boxes, please. The bear is thorough.');
+    $('#go').disabled=true; $('#go').textContent='Sniffing\u2026 \u{1F43E}';
+    try{
+      await signInWithEmailAndPassword(auth, em, pw);
+      say('Paw accepted. Come on in.','good');
+      $('#go').textContent='Welcome \u{1F36F}';
+      setTimeout(()=>location.replace('index.html'), 500);
+    }catch(e){
+      nope(FRIENDLY[e.code] || e.message);
+      $('#go').disabled=false; $('#go').textContent='Let me in \u{1F36F}';
+    }
+  };
+
+  window.__reset = async function(){
+    const em=$('#em').value.trim();
+    if(!em) return nope('Type your email in the box above first.');
+    try{ await sendPasswordResetEmail(auth, em); say('Reset link sent to '+em+'. Go check your inbox.','good'); }
+    catch(e){ nope(FRIENDLY[e.code] || e.message); }
+  };
+}catch(e){
+  nope('Cannot reach Firebase from this network. On office wifi, ask IT to allow gstatic.com and firebaseapp.com.');
+}
+</script>
+</body>
+</html>
