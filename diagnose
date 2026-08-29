@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>People Console — Setup check</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--red:#C8102E;--red-50:#FDF3F5;--ink:#1E1E1E;--muted:#6E6E73;--line:#E4E4E8;--bg:#F4F5F6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.55}
+.wrap{max-width:820px;margin:0 auto;padding:34px 22px 70px}
+h1{font-size:22px;letter-spacing:-.025em;margin:0 0 6px}
+.sub{color:var(--muted);font-size:13.5px;margin:0 0 26px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(16,17,20,.06)}
+.row{display:flex;gap:14px;padding:15px 18px;border-bottom:1px solid #F0F0F3;align-items:flex-start}
+.row:last-child{border-bottom:0}
+.badge{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;margin-top:1px}
+.ok{background:#2E7D4F}.bad{background:var(--red)}.warn{background:#D68B00}.wait{background:#96969C}
+.t{font-weight:600;font-size:13.5px}
+.d{color:var(--muted);font-size:12.5px;margin-top:3px}
+.d code,.mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;background:#F4F5F6;padding:1px 5px;border-radius:4px}
+.verdict{margin:24px 0 0;padding:16px 18px;border-radius:12px;background:#fff;border:1px solid var(--line);border-left:3px solid var(--red)}
+.verdict h2{font-size:15px;margin:0 0 8px}
+.verdict ol{margin:8px 0 0;padding-left:20px}.verdict li{margin-bottom:7px}
+a{color:var(--red);font-weight:600}
+.btns{margin-top:22px;display:flex;gap:9px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;color:#3D3D3D;padding:9px 15px;border-radius:8px;
+  font:600 13px Inter,sans-serif;cursor:pointer;text-decoration:none;display:inline-block}
+.btn:hover{border-color:#96969C}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>People Console — setup check</h1>
+  <p class="sub">Open this page from the same folder as <span class="mono">login.html</span>. It checks everything the sign-in flow depends on and tells you which one is broken.</p>
+
+  <div class="card" id="rows"></div>
+
+  <div class="verdict" id="verdict" style="display:none"><h2>What to do</h2><div id="verdictBody"></div></div>
+
+  <div class="btns">
+    <a class="btn primary" href="login.html">Go to sign-in</a>
+    <a class="btn" href="index.html">Go to dashboard</a>
+    <button class="btn" id="clearBtn" type="button">Clear stored session &amp; retry</button>
+  </div>
+</div>
+
+<script>
+/* Classic script — runs even where module scripts are blocked, which is the
+   single most common cause of "the login page does nothing". */
+(function(){
+  var rows=document.getElementById('rows'), v=document.getElementById('verdict'), vb=document.getElementById('verdictBody');
+  function row(state,title,detail){
+    var el=document.createElement('div'); el.className='row';
+    el.innerHTML='<span class="badge '+state+'">'+(state==='ok'?'✓':state==='bad'?'✕':'!')+'</span>'+
+                 '<div><div class="t">'+title+'</div><div class="d">'+detail+'</div></div>';
+    rows.appendChild(el);
+  }
+  if(location.protocol==='file:'){
+    window.__tbhHandled=true;
+    row('bad','How this page was opened',
+      'You opened these files straight from your computer (<code>file://</code>). Browsers refuse to run '+
+      '<code>type="module"</code> scripts from file:// for security reasons — and both the sign-in code and the '+
+      'auth guard are module scripts. <b>Nothing will work until the files are served over http.</b>');
+    row('warn','Everything else','Cannot be tested until the above is fixed.');
+    v.style.display='block';
+    vb.innerHTML='<ol><li>Push the folder to <b>GitHub Pages</b> and open the published address, <i>or</i></li>'+
+      '<li>open a terminal in that folder, run <code>python -m http.server 8000</code>, '+
+      'then visit <code>http://localhost:8000/login.html</code></li></ol>'+
+      '<p style="margin:10px 0 0;color:#6E6E73">Double-clicking <code>login.html</code> will never work, no matter what the code says.</p>';
+  }
+  /* last-resort net: if the module below never reports anything, say so */
+  setTimeout(function(){
+    if(window.__tbhHandled) return;
+    if(rows.querySelectorAll('.badge.wait').length === rows.querySelectorAll('.badge').length && rows.children.length){
+      v.style.display='block';
+      vb.innerHTML='The checks never ran, which means module scripts are being blocked on this page. '+
+        'Serve the folder over http (GitHub Pages, or <code>python -m http.server 8000</code>) rather than opening the file directly.';
+    }
+  }, 10000);
+})();
+</script>
+
+<script type="module">
+/* async wrapper: `await` is used below, and this lets us bail out early
+   when the classic script has already reported a file:// page */
+(async function(){
+if (window.__tbhHandled) return;
+const rows = document.getElementById('rows');
+const results = [];
+
+function add(id, title){
+  const el = document.createElement('div');
+  el.className = 'row'; el.id = 'r_'+id;
+  el.innerHTML = '<span class="badge wait">…</span><div><div class="t">'+title+'</div><div class="d">checking…</div></div>';
+  rows.appendChild(el);
+  return el;
+}
+function set(id, state, detail){
+  const el = document.getElementById('r_'+id); if(!el) return;
+  el.querySelector('.badge').className = 'badge '+state;
+  el.querySelector('.badge').textContent = state==='ok' ? '✓' : state==='bad' ? '✕' : '!';
+  el.querySelector('.d').innerHTML = detail;
+  results.push({id:id, state:state});
+}
+
+/* the checks, in the order they matter */
+add('proto',  'How this page was opened');
+add('files',  'login.html, index.html and auth-guard.js are all present');
+add('store',  'Browser is allowed to store the session');
+add('sdk',    'Firebase SDK can be downloaded');
+add('domain', 'This web address is authorised in Firebase');
+add('state',  'Current sign-in state');
+
+/* 1 — protocol -------------------------------------------------------- */
+const isFile = location.protocol === 'file:';
+if (isFile) {
+  set('proto','bad','You opened this straight from your computer (<code>file://</code>). '+
+    'Browsers block <code>type="module"</code> scripts on file:// — so the sign-in code never runs and the '+
+    'Sign in button does nothing. <b>This alone breaks the login.</b>');
+} else {
+  set('proto','ok','Served over <code>'+location.protocol+'//'+location.host+'</code> — correct.');
+}
+
+/* 2 — sibling files --------------------------------------------------- */
+if (isFile) {
+  set('files','warn','Cannot be checked on file://.');
+} else {
+  const names = ['login.html','index.html','auth-guard.js'];
+  const found = await Promise.all(names.map(async n => {
+    try { const r = await fetch(n, {method:'GET', cache:'no-store'}); return r.ok; } catch(e){ return false; }
+  }));
+  const missing = names.filter((n,i)=>!found[i]);
+  if (missing.length === 0) set('files','ok','All three files are in this folder.');
+  else set('files','bad','Missing from this folder: <code>'+missing.join('</code> <code>')+'</code>. '+
+    (missing.indexOf('auth-guard.js')>-1 ? 'Without <code>auth-guard.js</code> the dashboard shows a blank screen after sign-in.' : ''));
+}
+
+/* 3 — storage --------------------------------------------------------- */
+let storeOk = true;
+try { localStorage.setItem('tbh_probe','1'); localStorage.removeItem('tbh_probe'); } catch(e){ storeOk = false; }
+if (storeOk) set('store','ok','Site data is available, so the session will be remembered.');
+else set('store','bad','Site data is blocked — probably a private / incognito window or a cookie setting. '+
+  'The login will succeed and then immediately bounce back to the sign-in page.');
+
+/* 4 + 5 + 6 — firebase ------------------------------------------------ */
+const cfg = {
+  apiKey: "AIzaSyAnBRk_EzjEkXGN6Yeh7HrJa-6iNNZb0-g",
+  authDomain: "hr-dashboard-ad102.firebaseapp.com",
+  projectId: "hr-dashboard-ad102",
+  storageBucket: "hr-dashboard-ad102.firebasestorage.app",
+  messagingSenderId: "494269148327",
+  appId: "1:494269148327:web:562d56ff66064e25ae7f82"
+};
+try {
+  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+  const { getAuth, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+  set('sdk','ok','Downloaded from <code>gstatic.com</code> without a problem.');
+
+  const host = location.hostname || '(none)';
+  if (isFile || host === '' ) {
+    set('domain','warn','No hostname to check on file://.');
+  } else if (host === 'localhost' || host === '127.0.0.1') {
+    set('domain','ok','<code>localhost</code> is authorised by Firebase by default.');
+  } else {
+    set('domain','warn','Firebase only accepts sign-ins from domains on its allow-list. '+
+      'Confirm <code>'+host+'</code> appears under <b>Firebase console → Authentication → Settings → Authorized domains</b>. '+
+      'If it is missing, sign-in fails with <code>auth/unauthorized-domain</code>.');
+  }
+
+  const auth = getAuth(initializeApp(cfg));
+  await new Promise(res => {
+    let done = false;
+    onAuthStateChanged(auth, u => {
+      if (done) return; done = true;
+      if (u) set('state','ok','Signed in as <code>'+(u.email||u.uid)+'</code>. '+
+        'The dashboard should open — if it does not, the problem is <code>auth-guard.js</code>, not the login.');
+      else set('state','warn','Not signed in right now. That is normal if you have not signed in yet.');
+      res();
+    });
+    setTimeout(()=>{ if(!done){ done=true; set('state','bad','Firebase never answered. The network may be blocking it.'); res(); } }, 6000);
+  });
+} catch (e) {
+  set('sdk','bad','Could not download the Firebase SDK: <code>'+String(e.message||e)+'</code>. '+
+    (isFile ? 'On file:// this is expected.' : 'Ask IT to allow <code>gstatic.com</code> and <code>firebaseapp.com</code>.'));
+  set('domain','warn','Skipped — the SDK did not load.');
+  set('state','warn','Skipped — the SDK did not load.');
+}
+
+/* verdict ------------------------------------------------------------- */
+const bad = results.filter(r => r.state === 'bad').map(r => r.id);
+const v = document.getElementById('verdict'), vb = document.getElementById('verdictBody');
+v.style.display = 'block';
+if (bad.length === 0) {
+  vb.innerHTML = 'Everything the sign-in needs is in place. If it still will not move to the dashboard, '+
+    'sign in and then come back here — the “Current sign-in state” row will say whether Firebase accepted you.';
+} else {
+  const fixes = {
+    proto: 'Stop opening the files by double-clicking them. Put them on GitHub Pages, or run <code>python -m http.server 8000</code> in that folder and open <code>http://localhost:8000/login.html</code>.',
+    files: 'Upload the missing file(s) into the same folder as the others and reload.',
+    store: 'Use a normal (non-incognito) window, and allow site data / cookies for this address.',
+    sdk:   'Unblock <code>gstatic.com</code> and <code>firebaseapp.com</code> on this network, then reload.',
+    state: 'Firebase is not responding. Check the internet connection and any firewall between this machine and Google.'
+  };
+  vb.innerHTML = '<ol>' + bad.map(id => '<li>'+fixes[id]+'</li>').join('') + '</ol>';
+}
+
+})();
+
+document.getElementById('clearBtn').onclick = function(){
+  try { localStorage.clear(); sessionStorage.clear(); } catch(e){}
+  location.reload();
+};
+</script>
+</body>
+</html>
