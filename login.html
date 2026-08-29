@@ -70,6 +70,7 @@ input:focus{outline:none;background:#fff;border-color:var(--red);box-shadow:0 0 
 .msg.on{display:block}
 .msg.bad{background:var(--red-50);border:1px solid #F6C9D1;border-left:3px solid var(--red);color:var(--red-900)}
 .msg.good{background:#F1F8F3;border:1px solid #CFE6D7;border-left:3px solid #2E7D4F;color:#1E5334}
+.msg.info{background:#FAFAFB;border:1px solid var(--line);border-left:3px solid var(--muted);color:var(--ink-2)}
 .divide{height:1px;background:var(--line);margin:28px 0 16px}
 .foot{font-size:11px;color:var(--muted-2);line-height:1.6}
 .foot b{color:var(--muted);font-weight:600}
@@ -146,6 +147,15 @@ input:focus{outline:none;background:#fff;border-color:var(--red);box-shadow:0 0 
 const $ = s => document.querySelector(s);
 function say(t,k){ const m=$('#msg'); m.textContent=t; m.className='msg on '+k; }
 function nope(t){ say(t,'bad'); const b=$('#box'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+
+/* why the user landed back here — wrapped so a browser that refuses
+   replaceState (file:// in some versions) can never stop the wiring below */
+try{
+  const q=new URLSearchParams(location.search);
+  if(q.get('timeout'))        say('You were signed out automatically after 10 minutes of inactivity. Please sign in again.','info');
+  else if(q.get('signedout')) say('You have been signed out.','info');
+  if(q.has('timeout')||q.has('signedout')) history.replaceState(null,'',location.pathname);
+}catch(e){}
 
 $('#eye').onclick=()=>{ const p=$('#pw'), show=p.type==='password';
   p.type=show?'text':'password';
