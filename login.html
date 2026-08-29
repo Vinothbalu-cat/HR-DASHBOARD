@@ -3,93 +3,83 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sign in · TBH People Console</title>
+<title>Sign in · The Bear House People Console</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#160E2E; --violet:#7C3AED; --pink:#FF2D8B; --lime:#C4F82A;
-  --cyan:#12D9E8; --tang:#FF7A2F; --sun:#FFCE1F; --muted:#6B5E8C; --paper:#F3EFFF;
+  --red:#C8102E; --red-700:#9B0C23; --red-900:#7E1020; --red-300:#E4677A; --red-50:#FDF3F5;
+  --ink:#1E1E1E; --ink-2:#3D3D3D; --muted:#6E6E73; --muted-2:#96969C;
+  --line:#E4E4E8; --line-2:#F0F0F3; --bg:#F4F5F6; --surface:#FFFFFF;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;font-family:Outfit,system-ui,sans-serif;color:var(--ink);background:var(--paper);overflow:hidden}
+body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);font-size:14px;-webkit-font-smoothing:antialiased}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 
-.shell{display:grid;grid-template-columns:1.05fr .95fr;height:100vh}
+.shell{display:grid;grid-template-columns:1.08fr .92fr;min-height:100vh}
 
-/* ---------- LEFT : brand stage ---------- */
-.stage{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:34px 42px;
-  background:linear-gradient(125deg,#7C3AED,#B429D4 34%,#FF2D8B 66%,#FF7A2F);background-size:280% 280%;animation:drift 16s ease infinite;border-right:5px solid var(--ink)}
-@keyframes drift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-.blob{position:absolute;border-radius:50%;filter:blur(14px);pointer-events:none}
-.b1{width:400px;height:400px;background:var(--lime);opacity:.34;top:-150px;right:-120px;animation:bob 10s ease-in-out infinite}
-.b2{width:280px;height:280px;background:var(--cyan);opacity:.30;bottom:-110px;left:-90px;animation:bob 13s ease-in-out infinite reverse}
-@keyframes bob{0%,100%{transform:translate(0,0)}50%{transform:translate(26px,-32px)}}
+/* ---------- LEFT : brand panel ---------- */
+.stage{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;
+  padding:40px 48px;background:linear-gradient(150deg,#C8102E 0%,#AE0E28 55%,#7E1020 100%);color:#fff}
+.stage::after{content:"";position:absolute;right:-120px;top:-140px;width:460px;height:460px;border-radius:50%;background:rgba(255,255,255,.055)}
+.stage::before{content:"";position:absolute;left:-90px;bottom:-160px;width:340px;height:340px;border-radius:50%;background:rgba(0,0,0,.07)}
 
-.logo{display:flex;align-items:center;gap:13px;position:relative;z-index:3}
-.mark{width:50px;height:50px;border-radius:16px;background:var(--lime);border:3.5px solid var(--ink);box-shadow:4px 4px 0 var(--ink);
-  display:grid;place-items:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:23px}
-.logo b{font-family:'Space Grotesk',sans-serif;font-size:21px;color:#fff;display:block;line-height:1.1}
-.logo small{display:block;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.82);font-weight:700;margin-top:3px}
+.logo{display:flex;align-items:center;gap:14px;position:relative;z-index:3}
+.logo img{height:32px;width:auto;display:block;filter:brightness(0) invert(1)}
+.logo .fb{font-weight:800;font-size:17px;letter-spacing:-.02em;color:#fff;display:none;white-space:nowrap}
+.logo .div{width:1px;height:28px;background:rgba(255,255,255,.35)}
+.logo b{font-size:14px;font-weight:600;color:#fff;display:block;line-height:1.25}
+.logo small{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.72);font-weight:600;margin-top:2px}
 
-.big{position:relative;z-index:3}
-.big h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(34px,4.4vw,58px);line-height:1.02;color:#fff;margin:0;letter-spacing:-.035em;
-  text-shadow:4px 4px 0 rgba(22,14,46,.3)}
-.big h1 em{font-style:normal;background:var(--lime);color:var(--ink);padding:0 12px;border-radius:12px;border:4px solid var(--ink);
-  display:inline-block;transform:rotate(-2deg);text-shadow:none;box-shadow:5px 5px 0 rgba(22,14,46,.45)}
-.stickers{display:flex;gap:9px;flex-wrap:wrap;margin-top:26px}
-.stk{background:#fff;border:3px solid var(--ink);border-radius:99px;padding:7px 15px;font-weight:800;font-size:12.5px;box-shadow:3px 3px 0 var(--ink)}
-.stk:nth-child(1){transform:rotate(-2.5deg)}
-.stk:nth-child(2){transform:rotate(1.5deg);background:var(--sun)}
-.stk:nth-child(3){transform:rotate(-1deg);background:var(--cyan)}
+.big{position:relative;z-index:3;max-width:520px}
+.big h1{font-size:clamp(28px,3.3vw,42px);line-height:1.1;margin:0;letter-spacing:-.03em;font-weight:700}
+.big p{margin:16px 0 0;color:rgba(255,255,255,.85);font-size:14.5px;line-height:1.6;max-width:440px}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:26px}
+.pill{border:1px solid rgba(255,255,255,.34);background:rgba(255,255,255,.10);border-radius:6px;padding:6px 12px;font-weight:500;font-size:12px;color:#fff}
 
-.marquee{position:relative;z-index:3;background:var(--ink);border:3px solid var(--ink);border-radius:99px;overflow:hidden;padding:9px 0}
-.marquee div{display:inline-block;white-space:nowrap;color:var(--lime);font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;
-  animation:slide 22s linear infinite;padding-left:100%}
-@keyframes slide{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+.stage-foot{position:relative;z-index:3;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.62);font-weight:600;
+  border-top:1px solid rgba(255,255,255,.2);padding-top:18px}
 
 /* ---------- RIGHT : form ---------- */
-.form-side{display:grid;place-items:center;padding:26px;overflow:auto;
-  background:radial-gradient(circle at 20% 15%,rgba(124,58,237,.09),transparent 45%),radial-gradient(circle at 85% 80%,rgba(255,45,139,.09),transparent 45%)}
-.box{width:100%;max-width:400px;animation:drop .55s cubic-bezier(.2,.9,.3,1.3)}
-@keyframes drop{from{opacity:0;transform:translateY(-24px) rotate(-1.5deg)}to{opacity:1;transform:none}}
-.box.shake{animation:shake .42s}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-11px) rotate(-1deg)}40%{transform:translateX(11px) rotate(1deg)}60%{transform:translateX(-7px)}80%{transform:translateX(7px)}}
+.form-side{display:grid;place-items:center;padding:40px 28px;background:var(--surface)}
+.box{width:100%;max-width:372px}
+.box.shake{animation:shake .34s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
 
-.bear{width:74px;height:74px;border-radius:22px;background:var(--lime);border:4px solid var(--ink);box-shadow:5px 5px 0 var(--ink);
-  display:grid;place-items:center;font-size:37px;margin-bottom:18px;cursor:pointer;transition:.2s;user-select:none}
-.bear:hover{transform:rotate(-10deg) scale(1.09)}
-.bear.peek{background:var(--pink)}
-h2{font-family:'Space Grotesk',sans-serif;font-size:29px;margin:0 0 5px;letter-spacing:-.03em;line-height:1.12}
-.sub{color:var(--muted);font-size:14px;margin:0 0 24px;font-weight:600;min-height:21px}
-label{display:block;font:800 10.5px Outfit,sans-serif;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
+h2{font-size:23px;margin:0 0 6px;letter-spacing:-.025em;font-weight:700}
+.sub{color:var(--muted);font-size:13.5px;margin:0 0 28px;line-height:1.5}
+label{display:block;font:700 10px Inter,sans-serif;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
 .field{position:relative;margin-bottom:16px}
-input{width:100%;border:3.5px solid var(--ink);border-radius:16px;padding:14px 16px;font:600 15px Outfit,sans-serif;background:#fff;color:var(--ink);transition:.14s}
-input:focus{outline:none;box-shadow:5px 5px 0 var(--violet)}
-#pw{padding-right:56px}
-.eye{position:absolute;right:10px;top:33px;border:3px solid var(--ink);background:#fff;width:38px;height:38px;border-radius:12px;
-  cursor:pointer;font-size:16px;line-height:1;box-shadow:2px 2px 0 var(--ink)}
-.eye:hover{background:var(--lime)}
-.go{width:100%;border:4px solid var(--ink);background:var(--lime);color:var(--ink);padding:15px;border-radius:99px;
-  font:900 16px Outfit,sans-serif;cursor:pointer;box-shadow:6px 6px 0 var(--ink);transition:.13s;margin-top:5px}
-.go:hover:not(:disabled){transform:translate(-3px,-3px);box-shadow:9px 9px 0 var(--ink)}
-.go:active:not(:disabled){transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
-.go:disabled{opacity:.6;cursor:wait}
-.row{display:flex;justify-content:flex-end;margin:-8px 0 18px}
-.link{background:none;border:none;color:var(--violet);font:700 12.5px Outfit,sans-serif;cursor:pointer;padding:0;text-decoration:underline dotted}
-.link:hover{color:var(--pink)}
-.msg{display:none;margin-top:16px;padding:13px 15px;border-radius:16px;font-size:13.5px;font-weight:700;border:3.5px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
-.msg.on{display:block;animation:drop .3s}
-.msg.bad{background:#FFE3F0;color:#A3005C}
-.msg.good{background:#EAFCBF;color:#3F5C00}
-.foot{text-align:center;margin-top:24px;font:800 10px Outfit,sans-serif;letter-spacing:.2em;color:var(--muted)}
+input{width:100%;border:1px solid var(--line);border-radius:8px;padding:12px 14px;font:500 14px Inter,sans-serif;background:#FCFCFD;color:var(--ink);transition:.15s}
+input::placeholder{color:var(--muted-2);font-weight:400}
+input:focus{outline:none;background:#fff;border-color:var(--red);box-shadow:0 0 0 3px rgba(200,16,46,.11)}
+#pw{padding-right:52px}
+.eye{position:absolute;right:7px;top:29px;border:1px solid var(--line);background:#fff;width:34px;height:34px;border-radius:7px;
+  cursor:pointer;font-size:13px;line-height:1;color:var(--muted);transition:.15s}
+.eye:hover{border-color:var(--red);color:var(--red)}
+.row{display:flex;justify-content:flex-end;margin:-6px 0 20px}
+.link{background:none;border:none;color:var(--red);font:600 12.5px Inter,sans-serif;cursor:pointer;padding:0}
+.link:hover{color:var(--red-700);text-decoration:underline}
+.go{width:100%;border:1px solid var(--red);background:var(--red);color:#fff;padding:12px;border-radius:8px;
+  font:600 14.5px Inter,sans-serif;cursor:pointer;transition:.15s}
+.go:hover:not(:disabled){background:var(--red-700);border-color:var(--red-700)}
+.go:disabled{opacity:.62;cursor:wait}
+.msg{display:none;margin-top:16px;padding:11px 14px;border-radius:8px;font-size:12.5px;font-weight:500;line-height:1.5}
+.msg.on{display:block}
+.msg.bad{background:var(--red-50);border:1px solid #F6C9D1;border-left:3px solid var(--red);color:var(--red-900)}
+.msg.good{background:#F1F8F3;border:1px solid #CFE6D7;border-left:3px solid #2E7D4F;color:#1E5334}
+.divide{height:1px;background:var(--line);margin:28px 0 16px}
+.foot{font-size:11px;color:var(--muted-2);line-height:1.6}
+.foot b{color:var(--muted);font-weight:600}
 
 @media(max-width:900px){
-  .shell{grid-template-columns:1fr;grid-template-rows:auto 1fr;height:auto;min-height:100vh}
-  body{overflow:auto}
-  .stage{padding:22px 24px 26px;gap:20px;border-right:none;border-bottom:5px solid var(--ink)}
-  .big h1{font-size:32px}.stickers{margin-top:16px}
-  .form-side{padding:30px 22px 44px}
+  .shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .stage{padding:26px 24px 30px;gap:26px}
+  .big h1{font-size:26px}
+  .stage-foot{display:none}
+  .form-side{padding:34px 22px 48px}
 }
 </style>
 </head>
@@ -97,71 +87,81 @@ input:focus{outline:none;box-shadow:5px 5px 0 var(--violet)}
 <div class="shell">
 
   <div class="stage">
-    <div class="blob b1"></div><div class="blob b2"></div>
-    <div class="logo"><div class="mark">B</div><div><b>The Bear House</b><small>People Console</small></div></div>
+    <div class="logo">
+      <img alt="The Bear House"
+           src="https://thebearhouse.com/cdn/shop/files/logo-tbh.svg?v=1780900554&width=300"
+           onerror="this.style.display='none';this.parentNode.querySelector('.fb').style.display='block'">
+      <span class="fb">THE BEAR HOUSE</span>
+      <span class="div"></span>
+      <span><b>People Console</b><small>Human Resource Analytics</small></span>
+    </div>
+
     <div class="big">
-      <h1>Only <em>bears</em><br>beyond this<br>point.</h1>
-      <div class="stickers">
-        <span class="stk">🐻 Headcount</span>
-        <span class="stk">📍 Store level</span>
-        <span class="stk">⏳ Tenure bands</span>
+      <h1>Headcount, grade and store manning &mdash; in one place.</h1>
+      <p>The People Console reports live from the employee master: company headcount, HQ grade and band structure, tenure profiles, and store-level manning across every location.</p>
+      <div class="pills">
+        <span class="pill">Organisation</span>
+        <span class="pill">HQ grade &amp; band</span>
+        <span class="pill">Offline retail</span>
+        <span class="pill">Cost</span>
       </div>
     </div>
-    <div class="marquee"><div>HEADCOUNT · GENDER MIX · TENURE BANDS · SENIORITY SPLIT · STORE MANNING · HQ FUNCTIONS · HEADCOUNT · GENDER MIX · TENURE BANDS · SENIORITY SPLIT · STORE MANNING · HQ FUNCTIONS ·&nbsp;</div></div>
+
+    <div class="stage-foot">
+      <span>The Bear House Clothing Pvt. Ltd.</span>
+      <span>Confidential &mdash; internal use only</span>
+    </div>
   </div>
 
   <div class="form-side">
     <div class="box" id="box">
-      <div class="bear" id="bear" title="poke me">🐻</div>
-      <h2>Show us your paw.</h2>
-      <p class="sub" id="sub">And your password. Mostly the password.</p>
+      <h2>Sign in</h2>
+      <p class="sub" id="sub">Use your Bear House work email address to continue.</p>
 
       <div class="field">
         <label for="em">Work email</label>
-        <input id="em" type="email" autocomplete="username" placeholder="you@thebearhouse.in" spellcheck="false">
+        <input id="em" type="email" autocomplete="username" placeholder="name@thebearhouse.com" spellcheck="false">
       </div>
 
       <div class="field">
         <label for="pw">Password</label>
-        <input id="pw" type="password" autocomplete="current-password" placeholder="................">
-        <button class="eye" id="eye" type="button" title="Show password">👁</button>
+        <input id="pw" type="password" autocomplete="current-password" placeholder="Enter your password">
+        <button class="eye" id="eye" type="button" title="Show password" aria-label="Show password">&#128065;</button>
       </div>
 
-      <div class="row"><button class="link" id="reset">Forgot it? Happens to the best bears.</button></div>
+      <div class="row"><button class="link" id="reset">Forgot password?</button></div>
 
-      <button class="go" id="go">Let me in 🍯</button>
-      <div class="msg" id="msg"></div>
-      <div class="foot">AUTHORISED BEARS ONLY</div>
+      <button class="go" id="go">Sign in</button>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+
+      <div class="divide"></div>
+      <p class="foot"><b>Authorised access only.</b> This console contains confidential employee data. Accounts are created by the HR team &mdash; if you do not have one, contact HR rather than registering.</p>
     </div>
   </div>
 
 </div>
 
 <script>
-/* ---------- Plain UI. Wired immediately so the page is never dead, even if Firebase is slow or blocked. ---------- */
+/* ---------- Plain UI, wired immediately so the page is never dead even if Firebase is slow or blocked. ---------- */
 const $ = s => document.querySelector(s);
 function say(t,k){ const m=$('#msg'); m.textContent=t; m.className='msg on '+k; }
 function nope(t){ say(t,'bad'); const b=$('#box'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
 
-$('#pw').addEventListener('focus', ()=>{ $('#bear').textContent='\u{1F648}'; $('#bear').classList.add('peek'); });
-$('#pw').addEventListener('blur',  ()=>{ $('#bear').textContent='\u{1F43B}'; $('#bear').classList.remove('peek'); });
-
-const quips=['Still just a bear.','Try the honey button.','No, I do not know your password.','Bear fact: bears cannot read.','Stop poking. Start typing.','Ask HR, not the bear.'];
-let poke=0;
-$('#bear').onclick=()=>{ $('#sub').textContent=quips[poke++ % quips.length]; };
-
 $('#eye').onclick=()=>{ const p=$('#pw'), show=p.type==='password';
-  p.type=show?'text':'password'; $('#eye').textContent=show?'\u{1FAE3}':'\u{1F441}'; p.focus(); };
+  p.type=show?'text':'password';
+  $('#eye').innerHTML=show?'&#128584;':'&#128065;';
+  $('#eye').title=show?'Hide password':'Show password';
+  p.focus(); };
 
 $('#em').onkeydown=e=>{ if(e.key==='Enter') $('#pw').focus(); };
 $('#pw').onkeydown=e=>{ if(e.key==='Enter') go(); };
-function go(){ window.__signIn ? window.__signIn() : nope('Still waking up the bear. Give it a second and try again.'); }
+function go(){ window.__signIn ? window.__signIn() : nope('Still connecting to the sign-in service. Give it a moment and try again.'); }
 $('#go').onclick=go;
-$('#reset').onclick=()=>{ window.__reset ? window.__reset() : nope('Still waking up the bear. Give it a second.'); };
+$('#reset').onclick=()=>{ window.__reset ? window.__reset() : nope('Still connecting to the sign-in service. Give it a moment and try again.'); };
 </script>
 
 <script type="module">
-/* ---------- Firebase, loaded on its own so a blocked CDN cannot break the form ---------- */
+/* ---------- Firebase, loaded separately so a blocked CDN cannot break the form ---------- */
 const firebaseConfig = {
   apiKey: "AIzaSyAnBRk_EzjEkXGN6Yeh7HrJa-6iNNZb0-g",
   authDomain: "hr-dashboard-ad102.firebaseapp.com",
@@ -172,15 +172,15 @@ const firebaseConfig = {
 };
 
 const FRIENDLY={
-  'auth/invalid-credential':'That paw does not match. Check the email and password.',
-  'auth/invalid-email':'That email address is not shaped like an email address.',
-  'auth/user-disabled':'This account has been switched off. Talk to HR.',
-  'auth/user-not-found':'No bear by that name \u2014 HR has to create the account first.',
-  'auth/wrong-password':'Wrong password. The bear remains unimpressed.',
-  'auth/too-many-requests':'Too many tries. The bear is napping \u2014 try again in a few minutes.',
-  'auth/network-request-failed':'No connection to Firebase. Check the internet.',
-  'auth/unauthorized-domain':'This web address is not in the Firebase Authorized domains list yet.',
-  'auth/operation-not-allowed':'Email/Password sign-in is not switched on in the Firebase console yet.'
+  'auth/invalid-credential':'That email and password combination is not recognised. Please check both and try again.',
+  'auth/invalid-email':'That does not look like a valid email address.',
+  'auth/user-disabled':'This account has been disabled. Please contact the HR team.',
+  'auth/user-not-found':'No account exists for that email address. HR needs to create the account first.',
+  'auth/wrong-password':'Incorrect password. Please try again or use “Forgot password?”.',
+  'auth/too-many-requests':'Too many failed attempts. For security, please wait a few minutes before trying again.',
+  'auth/network-request-failed':'No connection to the sign-in service. Please check your internet connection.',
+  'auth/unauthorized-domain':'This web address has not been added to the Firebase Authorized domains list yet.',
+  'auth/operation-not-allowed':'Email and password sign-in has not been enabled in the Firebase console yet.'
 };
 
 try{
@@ -196,27 +196,27 @@ try{
 
   window.__signIn = async function(){
     const em=$('#em').value.trim(), pw=$('#pw').value;
-    if(!em || !pw) return nope('Both boxes, please. The bear is thorough.');
-    $('#go').disabled=true; $('#go').textContent='Sniffing\u2026 \u{1F43E}';
+    if(!em || !pw) return nope('Please enter both your work email and your password.');
+    $('#go').disabled=true; $('#go').textContent='Signing in…';
     try{
       await signInWithEmailAndPassword(auth, em, pw);
-      say('Paw accepted. Come on in.','good');
-      $('#go').textContent='Welcome \u{1F36F}';
+      say('Signed in. Opening the console…','good');
+      $('#go').textContent='Signed in';
       setTimeout(()=>location.replace('index.html'), 500);
     }catch(e){
       nope(FRIENDLY[e.code] || e.message);
-      $('#go').disabled=false; $('#go').textContent='Let me in \u{1F36F}';
+      $('#go').disabled=false; $('#go').textContent='Sign in';
     }
   };
 
   window.__reset = async function(){
     const em=$('#em').value.trim();
-    if(!em) return nope('Type your email in the box above first.');
-    try{ await sendPasswordResetEmail(auth, em); say('Reset link sent to '+em+'. Go check your inbox.','good'); }
+    if(!em) return nope('Enter your work email address above, then select “Forgot password?”.');
+    try{ await sendPasswordResetEmail(auth, em); say('A password reset link has been sent to '+em+'. Please check your inbox.','good'); }
     catch(e){ nope(FRIENDLY[e.code] || e.message); }
   };
 }catch(e){
-  nope('Cannot reach Firebase from this network. On office wifi, ask IT to allow gstatic.com and firebaseapp.com.');
+  nope('Cannot reach the sign-in service from this network. If you are on office wifi, ask IT to allow gstatic.com and firebaseapp.com.');
 }
 </script>
 </body>
