@@ -3,230 +3,1340 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sign in · The Bear House People Console</title>
+<title>The Bear House — People Console</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
 :root{
-  --red:#C8102E; --red-700:#9B0C23; --red-900:#7E1020; --red-300:#E4677A; --red-50:#FDF3F5;
+  --red:#C8102E; --red-700:#9B0C23; --red-900:#7E1020; --red-300:#E4677A; --red-100:#F6C9D1; --red-50:#FDF3F5;
   --ink:#1E1E1E; --ink-2:#3D3D3D; --muted:#6E6E73; --muted-2:#96969C;
   --line:#E4E4E8; --line-2:#F0F0F3; --bg:#F4F5F6; --surface:#FFFFFF;
+  --r:10px; --sh:0 1px 2px rgba(16,17,20,.05),0 1px 3px rgba(16,17,20,.07);
+  --sh-lg:0 4px 12px rgba(16,17,20,.09),0 1px 3px rgba(16,17,20,.06);
 }
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);font-size:14px;-webkit-font-smoothing:antialiased}
-.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-weight:700;letter-spacing:-.015em;margin:0}
+.wrap{max-width:1440px;margin:0 auto;padding:0 28px}
 
-.shell{display:grid;grid-template-columns:1.08fr .92fr;min-height:100vh}
+/* ---------- masthead ---------- */
+.masthead{background:var(--surface);border-bottom:1px solid var(--line)}
+.mast-in{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.logo{height:34px;width:auto;display:block}
+.logo-fb{font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--ink);white-space:nowrap}
+.brand-div{width:1px;height:30px;background:var(--line)}
+.brand-txt b{display:block;font-size:14.5px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+.brand-txt small{display:block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--red);font-weight:700;margin-top:2px}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.userchip{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 12px 6px 6px;background:#FAFAFB;font:600 12px Inter,sans-serif;color:var(--ink-2);max-width:230px}
+.userchip .av{width:24px;height:24px;flex:none;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font:700 10.5px Inter,sans-serif;text-transform:uppercase}
+.userchip span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#btnLogout:hover{border-color:var(--red);color:var(--red)}
+/* dashboard stays hidden until the auth guard confirms a signed-in user */
+html.auth-pending body>*:not(#authVeil){visibility:hidden}
+#authVeil{position:fixed;inset:0;z-index:200;display:none;place-items:center;background:var(--bg);color:var(--muted);font:600 13px Inter,sans-serif}
+html.auth-pending #authVeil{display:grid}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);padding:8px 14px;border-radius:8px;font:600 12.5px Inter,sans-serif;cursor:pointer;transition:.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--muted-2);background:#FAFAFB}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+.btn.primary:hover{background:var(--red-700);border-color:var(--red-700)}
+.btn.icon{padding:8px 10px}
 
-/* ---------- LEFT : brand panel ---------- */
-.stage{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;
-  padding:40px 48px;background:linear-gradient(150deg,#C8102E 0%,#AE0E28 55%,#7E1020 100%);color:#fff}
-.stage::after{content:"";position:absolute;right:-120px;top:-140px;width:460px;height:460px;border-radius:50%;background:rgba(255,255,255,.055)}
-.stage::before{content:"";position:absolute;left:-90px;bottom:-160px;width:340px;height:340px;border-radius:50%;background:rgba(0,0,0,.07)}
+/* ---------- title band ---------- */
+.band{background:var(--red);color:#fff;padding:26px 0 30px;position:relative;overflow:hidden}
+.band::after{content:"";position:absolute;right:-70px;top:-90px;width:340px;height:340px;border-radius:50%;background:rgba(255,255,255,.06)}
+.band::before{content:"";position:absolute;right:140px;bottom:-150px;width:250px;height:250px;border-radius:50%;background:rgba(0,0,0,.06)}
+.band-in{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;gap:22px;flex-wrap:wrap}
+.band h1{font-size:29px;line-height:1.15;color:#fff;letter-spacing:-.025em}
+.band p{margin:9px 0 0;color:rgba(255,255,255,.86);font-size:13.5px;max-width:640px}
+.freshness{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;color:#fff;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.28);padding:6px 13px;border-radius:99px;font-weight:600}
+.dot{width:7px;height:7px;border-radius:50%;background:#7BE3A5;flex:none}
+.dot.err{background:#FFD166}.dot.wait{background:#FFF;opacity:.7}
 
-.logo{display:flex;align-items:center;gap:14px;position:relative;z-index:3}
-.logo img{height:32px;width:auto;display:block;filter:brightness(0) invert(1)}
-.logo .fb{font-weight:800;font-size:17px;letter-spacing:-.02em;color:#fff;display:none;white-space:nowrap}
-.logo .div{width:1px;height:28px;background:rgba(255,255,255,.35)}
-.logo b{font-size:14px;font-weight:600;color:#fff;display:block;line-height:1.25}
-.logo small{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.72);font-weight:600;margin-top:2px}
+/* ---------- tabs ---------- */
+.tabbar{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30;box-shadow:0 1px 2px rgba(16,17,20,.04)}
+.tabs{display:flex;gap:2px;overflow-x:auto}
+.tab{appearance:none;background:none;border:0;border-bottom:2.5px solid transparent;padding:14px 18px;cursor:pointer;font:600 13.5px Inter,sans-serif;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:9px;transition:.15s}
+.tab:hover{color:var(--ink)}
+.tab .n{font:700 10px 'JetBrains Mono',monospace;color:var(--muted-2);background:var(--line-2);border-radius:4px;padding:2px 5px}
+.tab[aria-selected="true"]{color:var(--red);border-bottom-color:var(--red)}
+.tab[aria-selected="true"] .n{background:var(--red-50);color:var(--red)}
 
-.big{position:relative;z-index:3;max-width:520px}
-.big h1{font-size:clamp(28px,3.3vw,42px);line-height:1.1;margin:0;letter-spacing:-.03em;font-weight:700}
-.big p{margin:16px 0 0;color:rgba(255,255,255,.85);font-size:14.5px;line-height:1.6;max-width:440px}
-.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:26px}
-.pill{border:1px solid rgba(255,255,255,.34);background:rgba(255,255,255,.10);border-radius:6px;padding:6px 12px;font-weight:500;font-size:12px;color:#fff}
+main{padding:24px 0 60px}
+.panel{display:none}.panel.on{display:block}
+.sec{margin:30px 0 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px}
+.sec:first-of-type{margin-top:6px}
+.sec h2{font-size:17px;letter-spacing:-.015em}
+.sec .hint{font-size:12px;color:var(--muted)}
 
-.stage-foot{position:relative;z-index:3;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
-  font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.62);font-weight:600;
-  border-top:1px solid rgba(255,255,255,.2);padding-top:18px}
+/* ---------- kpis ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--line)}
+.kpi.a::before{background:var(--red)}.kpi.b::before{background:var(--ink)}.kpi.c::before{background:var(--red-300)}
+.kpi .k{font:700 10px Inter,sans-serif;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-size:25px;font-weight:700;letter-spacing:-.03em;margin-top:5px;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:11.5px;color:var(--muted);margin-top:4px}
+.kpi .d b{color:var(--ink);font-weight:600}
 
-/* ---------- RIGHT : form ---------- */
-.form-side{display:grid;place-items:center;padding:40px 28px;background:var(--surface)}
-.box{width:100%;max-width:372px}
-.box.shake{animation:shake .34s ease}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+/* ---------- cards ---------- */
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(400px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.card-h h3{font-size:13.5px;font-weight:650}
+.card-h span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;font-weight:400}
+.expand{border:1px solid var(--line);background:var(--surface);width:28px;height:28px;flex:none;border-radius:7px;cursor:pointer;font-size:12px;color:var(--muted);transition:.15s}
+.expand:hover{border-color:var(--red);color:var(--red)}
+.card-b{padding:14px 16px}
+.chartbox{position:relative;height:262px}
 
-h2{font-size:23px;margin:0 0 6px;letter-spacing:-.025em;font-weight:700}
-.sub{color:var(--muted);font-size:13.5px;margin:0 0 28px;line-height:1.5}
-label{display:block;font:700 10px Inter,sans-serif;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
-.field{position:relative;margin-bottom:16px}
-input{width:100%;border:1px solid var(--line);border-radius:8px;padding:12px 14px;font:500 14px Inter,sans-serif;background:#FCFCFD;color:var(--ink);transition:.15s}
-input::placeholder{color:var(--muted-2);font-weight:400}
-input:focus{outline:none;background:#fff;border-color:var(--red);box-shadow:0 0 0 3px rgba(200,16,46,.11)}
-#pw{padding-right:52px}
-.eye{position:absolute;right:7px;top:29px;border:1px solid var(--line);background:#fff;width:34px;height:34px;border-radius:7px;
-  cursor:pointer;font-size:13px;line-height:1;color:var(--muted);transition:.15s}
-.eye:hover{border-color:var(--red);color:var(--red)}
-.row{display:flex;justify-content:flex-end;margin:-6px 0 20px}
-.link{background:none;border:none;color:var(--red);font:600 12.5px Inter,sans-serif;cursor:pointer;padding:0}
-.link:hover{color:var(--red-700);text-decoration:underline}
-.go{width:100%;border:1px solid var(--red);background:var(--red);color:#fff;padding:12px;border-radius:8px;
-  font:600 14.5px Inter,sans-serif;cursor:pointer;transition:.15s}
-.go:hover:not(:disabled){background:var(--red-700);border-color:var(--red-700)}
-.go:disabled{opacity:.62;cursor:wait}
-.msg{display:none;margin-top:16px;padding:11px 14px;border-radius:8px;font-size:12.5px;font-weight:500;line-height:1.5}
-.msg.on{display:block}
-.msg.bad{background:var(--red-50);border:1px solid #F6C9D1;border-left:3px solid var(--red);color:var(--red-900)}
-.msg.good{background:#F1F8F3;border:1px solid #CFE6D7;border-left:3px solid #2E7D4F;color:#1E5334}
-.msg.info{background:#FAFAFB;border:1px solid var(--line);border-left:3px solid var(--muted);color:var(--ink-2)}
-.divide{height:1px;background:var(--line);margin:28px 0 16px}
-.foot{font-size:11px;color:var(--muted-2);line-height:1.6}
-.foot b{color:var(--muted);font-weight:600}
+/* ---------- tables ---------- */
+.tw{overflow:auto;max-height:520px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{position:sticky;top:0;background:#FAFAFB;color:var(--ink);text-align:left;padding:10px 12px;font:700 10px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;z-index:2;border-bottom:1px solid var(--line);box-shadow:inset 0 -1px 0 var(--line)}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+tbody tr:hover{background:var(--red-50)}
+td.n,th.n{text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+td.s,th.s{position:sticky;left:0;background:var(--surface);z-index:1;font-weight:600;box-shadow:1px 0 0 var(--line-2)}
+tbody tr:hover td.s{background:var(--red-50)}
+thead th.s{z-index:3;background:#FAFAFB}
+tfoot td{padding:10px 12px;font-weight:700;background:var(--red-50);border-top:1.5px solid var(--red-100);position:sticky;bottom:0;color:var(--ink)}
+tfoot td.s{background:var(--red-50)}
+.zero{color:#D3D3D8}
+.bar{height:6px;border-radius:99px;background:var(--line-2);overflow:hidden;width:46px;display:inline-block;vertical-align:middle;margin-left:7px}
+.bar i{display:block;height:100%;background:var(--red)}
+.chip{display:inline-block;padding:2px 9px;border-radius:5px;font:600 11px Inter,sans-serif;border:1px solid transparent}
 
-@media(max-width:900px){
-  .shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}
-  .stage{padding:26px 24px 30px;gap:26px}
-  .big h1{font-size:26px}
-  .stage-foot{display:none}
-  .form-side{padding:34px 22px 48px}
-}
+/* ---------- modals ---------- */
+.ov{position:fixed;inset:0;background:rgba(20,20,22,.55);display:none;align-items:center;justify-content:center;z-index:60;padding:24px;backdrop-filter:blur(3px)}
+.ov.on{display:flex}
+.modal{background:var(--surface);border-radius:14px;width:100%;max-width:980px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.3)}
+.modal-h{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--line)}
+.modal-h h3{font-size:14.5px}
+.modal-b{padding:20px;overflow:auto}
+.x{border:1px solid var(--line);background:#fff;width:29px;height:29px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--muted)}
+.x:hover{border-color:var(--red);color:var(--red)}
+label.f{display:block;font:700 10px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+input[type=text],input[type=password],textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:400 12.5px 'JetBrains Mono',monospace;background:#FCFCFD;color:var(--ink);resize:vertical}
+input:focus,textarea:focus{outline:none;background:#fff;border-color:var(--red);box-shadow:0 0 0 3px rgba(200,16,46,.10)}
+.note{font-size:12.5px;color:var(--ink-2);background:#FAFAFB;border:1px solid var(--line);border-left:3px solid var(--red);border-radius:8px;padding:12px 14px;margin-top:14px}
+.flag{background:#FFFBEB;border:1px solid #F5E3B3;border-left:3px solid #E0A800;border-radius:8px;color:#5A4708;padding:12px 15px;font-size:12.5px;margin:14px 0}
+.flag b{color:#3F3205}
+.err{background:var(--red-50);border:1px solid var(--red-100);border-left:3px solid var(--red);border-radius:8px;color:var(--red-900);padding:13px 15px;font-size:12.5px;margin-bottom:16px;display:none}
+.err.on{display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-bottom:10px}
+.legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px}
+
+/* ---------- present mode ---------- */
+body.present .masthead,body.present .band,body.present .tabbar,body.present footer{display:none}
+body.present main{padding:0}
+body.present .panel{display:none}
+body.present .panel.show-slide{display:block;min-height:100vh;padding:44px 0 64px}
+body.present .wrap{max-width:1600px}
+body.present .chartbox{height:330px}
+body.present .expand{display:none}
+.pbar{display:none;position:fixed;left:0;right:0;bottom:0;background:var(--ink);padding:10px 24px;align-items:center;justify-content:space-between;z-index:70;color:#fff;font-size:12px;font-weight:600}
+body.present .pbar{display:flex}
+.pbar .pn{font-family:'JetBrains Mono',monospace;color:#fff;opacity:.75;margin:0 10px}
+.pbar .btn{background:transparent;border-color:rgba(255,255,255,.3);color:#fff}
+.pbar .btn:hover{background:rgba(255,255,255,.12)}
+.pbar .btn.primary{background:var(--red);border-color:var(--red)}
+
+footer{border-top:1px solid var(--line);background:var(--surface);padding:18px 0 26px;color:var(--muted);font-size:11.5px}
+@media(max-width:640px){.band h1{font-size:22px}.wrap{padding:0 15px}.kpi .v{font-size:22px}}
+@media print{.masthead .actions,.tabbar,.expand{display:none}.panel{display:block!important}}
 </style>
+<script type="module" src="auth-guard.js"></script>
+<script>
+/* Hide the dashboard until auth-guard.js confirms a session.
+   Failsafe: if the guard never answers (blocked CDN, offline), reveal after 8s
+   so the page can never be bricked by a script that did not load. */
+document.documentElement.classList.add('auth-pending');
+setTimeout(function(){
+  var v=document.getElementById('authVeil');
+  if(v)v.innerHTML='<div style="text-align:center;max-width:420px;line-height:1.6">'+
+    '<b style="color:#1E1E1E">The sign-in check did not respond.</b><br>'+
+    'auth-guard.js could not run &mdash; it may be missing from this folder, or the network blocked it.<br>'+
+    '<a href="diagnose.html" style="color:#C8102E;font-weight:600">Run the diagnostic</a></div>';
+},3000);
+setTimeout(function(){document.documentElement.classList.remove('auth-pending')},6000);
+</script>
 </head>
 <body>
-<div class="shell">
+<div id="authVeil">Checking your session&hellip;</div>
 
-  <div class="stage">
-    <div class="logo">
-      <img alt="The Bear House"
-           src="https://thebearhouse.com/cdn/shop/files/logo-tbh.svg?v=1780900554&width=300"
-           onerror="this.style.display='none';this.parentNode.querySelector('.fb').style.display='block'">
-      <span class="fb">THE BEAR HOUSE</span>
-      <span class="div"></span>
-      <span><b>People Console</b><small>Human Resource Analytics</small></span>
-    </div>
-
-    <div class="big">
-      <h1>Headcount, grade and store manning &mdash; in one place.</h1>
-      <p>The People Console reports live from the employee master: company headcount, HQ grade and band structure, tenure profiles, and store-level manning across every location.</p>
-      <div class="pills">
-        <span class="pill">Organisation</span>
-        <span class="pill">HQ grade &amp; band</span>
-        <span class="pill">Offline retail</span>
-        <span class="pill">Cost</span>
-      </div>
-    </div>
-
-    <div class="stage-foot">
-      <span>The Bear House Clothing Pvt. Ltd.</span>
-      <span>Confidential &mdash; internal use only</span>
-    </div>
+<div class="masthead"><div class="wrap"><div class="mast-in">
+  <div class="brand">
+    <img class="logo" alt="The Bear House"
+         src="https://thebearhouse.com/cdn/shop/files/logo-tbh.svg?v=1780900554&width=300"
+         onerror="this.style.display='none';document.getElementById('logoFb').style.display='block'">
+    <div class="logo-fb" id="logoFb" style="display:none">THE BEAR HOUSE</div>
+    <div class="brand-div"></div>
+    <div class="brand-txt"><b>People Console</b><small>Human Resource Analytics</small></div>
   </div>
-
-  <div class="form-side">
-    <div class="box" id="box">
-      <h2>Sign in</h2>
-      <p class="sub" id="sub">Use your Bear House work email address to continue.</p>
-
-      <div class="field">
-        <label for="em">Work email</label>
-        <input id="em" type="email" autocomplete="username" placeholder="name@thebearhouse.com" spellcheck="false">
-      </div>
-
-      <div class="field">
-        <label for="pw">Password</label>
-        <input id="pw" type="password" autocomplete="current-password" placeholder="Enter your password">
-        <button class="eye" id="eye" type="button" title="Show password" aria-label="Show password">&#128065;</button>
-      </div>
-
-      <div class="row"><button class="link" id="reset">Forgot password?</button></div>
-
-      <button class="go" id="go">Sign in</button>
-      <div class="msg" id="msg" role="status" aria-live="polite"></div>
-
-      <div class="divide"></div>
-      <p class="foot"><b>Authorised access only.</b> This console contains confidential employee data. Accounts are created by the HR team &mdash; if you do not have one, contact HR rather than registering.</p>
-    </div>
+  <div class="actions">
+    <span class="userchip" id="userChip" hidden><span class="av" id="userAv">?</span><span id="userMail">—</span></span>
+    <button class="btn icon" id="btnEdit" title="Admin settings">&#9881;</button>
+    <button class="btn" id="btnReload">&#8635; Refresh</button>
+    <button class="btn" id="btnPrint">&#128438; Print</button>
+    <button class="btn primary" id="btnPresent">&#9654; Present</button>
+    <button class="btn" id="btnLogout" title="Sign out">&#9099; Sign out</button>
   </div>
+</div></div></div>
 
-</div>
+<div class="band"><div class="wrap"><div class="band-in">
+  <div>
+    <h1>Who works here, where, and how long.</h1>
+    <p>Headcount, gender mix, grade and band structure, tenure and store manning &mdash; live from the employee master.</p>
+  </div>
+  <div class="freshness"><span class="dot wait" id="statusDot"></span><span id="statusTxt">Loading&hellip;</span></div>
+</div></div></div>
+
+<div class="tabbar"><div class="wrap"><div class="tabs" role="tablist">
+  <button class="tab" role="tab" aria-selected="true" data-p="p1"><span class="n">01</span> Organisation</button>
+  <button class="tab" role="tab" aria-selected="false" data-p="p2"><span class="n">02</span> HQ</button>
+  <button class="tab" role="tab" aria-selected="false" data-p="p3"><span class="n">03</span> Offline Retail</button>
+  <button class="tab" role="tab" aria-selected="false" data-p="p4"><span class="n">04</span> Cost</button>
+</div></div></div>
+
+<main><div class="wrap">
+  <div class="err" id="errBox"></div>
+
+  <!-- ============ PANEL 1 : ORGANISATION ============ -->
+  <section class="panel on" id="p1">
+    <div class="sec"><h2>Company at a glance</h2><span class="hint">HQ = every department except RETAIL &middot; Tenure measured from Date Joined to today</span></div>
+    <div class="kpis" id="k1"></div>
+    <div id="costFlag1"></div>
+
+    <div class="sec"><h2>Experience bands</h2><span class="hint">Under 6 months &middot; 6 months&ndash;1.5 years &middot; 1.5&ndash;3 years &middot; Over 3 years</span></div>
+    <div class="kpis" id="kTen"></div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><div class="card-h"><div><h3>Experience bands &mdash; company</h3><span>Active employees</span></div><button class="expand" data-c="cTenure">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cTenure"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><div><h3>HQ vs Retail, by experience band</h3><span>Active employees</span></div><button class="expand" data-c="cTenSplit">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cTenSplit"></canvas></div></div></div>
+    </div>
+    <div class="card" style="margin-top:14px"><div class="tw"><table id="tTen"></table></div></div>
+
+    <div class="sec"><h2>How the organisation splits</h2><span class="hint">Active employees</span></div>
+    <div class="grid g3">
+      <div class="card"><div class="card-h"><div><h3>Gender mix</h3><span>Active employees</span></div><button class="expand" data-c="cGender">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cGender"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><div><h3>HQ vs Offline Retail</h3><span>Active employees</span></div><button class="expand" data-c="cLoc">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cLoc"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><div><h3>Age profile</h3><span>Active employees</span></div><button class="expand" data-c="cAge">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cAge"></canvas></div></div></div>
+    </div>
+
+    <div class="sec"><h2>Department scorecard</h2><span class="hint">Sorted by active headcount</span></div>
+    <div class="card"><div class="tw"><table id="tDept"></table></div></div>
+  </section>
+
+  <!-- ============ PANEL 2 : HQ ============ -->
+  <section class="panel" id="p2">
+    <div class="sec"><h2>HQ headcount</h2><span class="hint">Every department except RETAIL</span></div>
+    <div class="kpis" id="k2"></div>
+    <div id="costFlag2"></div>
+
+    <div class="sec"><h2>Grade structure</h2><span class="hint">Read from the GRADE column &mdash; Director &rarr; Head/GM/DGM &rarr; Senior Manager &rarr; Manager &rarr; Assistant Manager &rarr; Senior Executive &rarr; Executive &rarr; Management Trainee</span></div>
+    <div class="kpis" id="kGrade"></div>
+    <div class="card" style="margin-top:14px"><div class="card-h"><div><h3>Headcount by grade</h3><span>Active HQ employees &mdash; GRADE column</span></div></div><div class="tw"><table id="tGrade"></table></div></div>
+
+    <div class="sec"><h2>Band structure</h2><span class="hint">Read from the BAND column &mdash; Senior &middot; Mid &middot; Junior</span></div>
+    <div class="kpis" id="kBandTiles"></div>
+    <div class="card" style="margin-top:14px"><div class="card-h"><div><h3>Headcount by band</h3><span>Active HQ employees &mdash; BAND column</span></div></div><div class="tw"><table id="tBandTbl"></table></div></div>
+
+    <div class="sec"><h2>Grade by department</h2><span class="hint">How many of each grade sit in each function</span></div>
+    <div class="card"><div class="tw"><table id="tGradeDept"></table></div></div>
+
+    <div class="sec"><h2>Band by department</h2><span class="hint">Senior / Mid / Junior split across functions</span></div>
+    <div class="card"><div class="tw"><table id="tBandDept"></table></div></div>
+
+    <div class="sec"><h2>Function breakdown</h2></div>
+    <div class="grid g2">
+      <div class="card"><div class="card-h"><div><h3>HQ headcount by department</h3><span>Active only</span></div><button class="expand" data-c="cHqDept">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cHqDept"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><div><h3>HQ experience bands</h3><span>Active only</span></div><button class="expand" data-c="cHqTenure">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cHqTenure"></canvas></div></div></div>
+    </div>
+
+    <div class="sec"><h2>HQ department &amp; sub-function detail</h2></div>
+    <div class="card"><div class="tw"><table id="tHq"></table></div></div>
+  </section>
+
+  <!-- ============ PANEL 3 : OFFLINE RETAIL ============ -->
+  <section class="panel" id="p3">
+    <div class="sec"><h2>Store manning</h2><span class="hint">Department = RETAIL &middot; each Location counts as one store</span></div>
+    <div class="kpis" id="k3"></div>
+    <div id="costFlag3"></div>
+
+    <div class="sec"><h2>Where the retail team sits</h2></div>
+    <div class="grid g2">
+      <div class="card"><div class="card-h"><div><h3>Top stores by headcount</h3><span>Active store staff</span></div><button class="expand" data-c="cStoreHC">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cStoreHC"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><div><h3>Gender split by store</h3><span>Active store staff</span></div><button class="expand" data-c="cStoreGender">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cStoreGender"></canvas></div></div></div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><div class="card-h"><div><h3>Store staff by role</h3><span>Job Title, active</span></div><button class="expand" data-c="cRole">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cRole"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><div><h3>Store experience bands</h3><span>Active store staff</span></div><button class="expand" data-c="cStoreTenure">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cStoreTenure"></canvas></div></div></div>
+    </div>
+
+    <div class="sec"><h2>Store &times; Job title</h2><span class="hint">Count of active employees in each role, store by store &mdash; scroll sideways for more roles</span></div>
+    <div class="card"><div class="tw"><table id="tStoreRole"></table></div></div>
+
+    <div class="sec"><h2>Store &times; Experience band</h2><span class="hint">How seasoned each store's team is</span></div>
+    <div class="card"><div class="tw"><table id="tStoreTen"></table></div></div>
+
+    <div class="sec"><h2>Store-level scorecard</h2><span class="hint">Exit % = resigned &divide; all records for that store</span></div>
+    <div class="card"><div class="tw"><table id="tStore"></table></div></div>
+  </section>
+
+  <!-- ============ PANEL 4 : COST ============ -->
+  <section class="panel" id="p4">
+    <div class="sec"><h2>Annual cost</h2><span class="hint">Cost figures include resigned employees unless a column says &ldquo;active only&rdquo;</span></div>
+    <div class="kpis" id="kCost"></div>
+    <div id="costFlag4"></div>
+
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><div class="card-h"><div><h3>Annual cost by department</h3><span>All records, including resignees</span></div><button class="expand" data-c="cCostDept">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cCostDept"></canvas></div></div></div>
+      <div class="card"><div class="card-h"><div><h3>Cost split: HQ vs Offline Retail</h3><span>All records, including resignees</span></div><button class="expand" data-c="cCostSplit">&#9974;</button></div><div class="card-b"><div class="chartbox"><canvas id="cCostSplit"></canvas></div></div></div>
+    </div>
+
+    <div class="sec"><h2>Cost by department</h2></div>
+    <div class="card"><div class="tw"><table id="tCostDept"></table></div></div>
+
+    <div class="sec"><h2>Cost by department &amp; sub-department</h2></div>
+    <div class="card"><div class="tw"><table id="tCostSub"></table></div></div>
+
+    <div class="sec"><h2>Cost by store</h2><span class="hint">Offline retail locations only</span></div>
+    <div class="card"><div class="tw"><table id="tCostStore"></table></div></div>
+  </section>
+
+</div></main>
+
+<footer><div class="wrap" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+  <span>The Bear House &mdash; People Console</span><span class="mono" id="footStamp"></span><span class="mono" id="footSync"></span></div></footer>
+
+<div class="pbar"><span>The Bear House &middot; People Console</span>
+<span><button class="btn" id="pPrev">&larr; Prev</button><span class="pn" id="pNum"></span><button class="btn" id="pNext">Next &rarr;</button> <button class="btn primary" id="pExit">Exit</button></span></div>
+
+<div class="ov" id="ovPass"><div class="modal" style="max-width:420px"><div class="modal-h"><h3>Admin settings</h3><button class="x" data-close>&#10005;</button></div><div class="modal-b">
+  <label class="f">Username</label>
+  <input type="text" id="userIn" placeholder="username" autocomplete="off" spellcheck="false">
+  <label class="f">Password</label>
+  <input type="password" id="passIn" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="off">
+  <div id="passMsg" style="display:none;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--red)">Wrong username or password.</div>
+  <div class="note">This keeps the data-source panel out of the way of everyday viewers. It is <b>not</b> real security &mdash; the username and password sit in the page source, readable by anyone who opens View Source. Use the Firebase login (<span class="mono">login.html</span>) if you need the real thing.</div>
+  <div style="margin-top:16px;display:flex;gap:9px;justify-content:flex-end"><button class="btn" data-close>Cancel</button><button class="btn primary" id="passGo">Unlock</button></div>
+</div></div></div>
+
+<div class="ov" id="ovChart"><div class="modal"><div class="modal-h"><h3 id="ovChartTitle">Chart</h3><button class="x" data-close>&#10005;</button></div><div class="modal-b"><div style="height:64vh;position:relative"><canvas id="bigChart"></canvas></div></div></div></div>
+
+<div class="ov" id="ovEdit"><div class="modal" style="max-width:770px"><div class="modal-h"><h3>Data source</h3><button class="x" data-close>&#10005;</button></div><div class="modal-b">
+  <label class="f">Google Sheet URL</label>
+  <input type="text" id="csvUrl" placeholder="Paste your normal sheet URL (…/edit#gid=0) or a published CSV link">
+  <label class="f">&hellip;or paste CSV directly</label>
+  <textarea id="csvPaste" rows="6" placeholder="Employee Number,Name,STATUS,Date Of Birth,Gender,Location,Department,Sub Department,Job Title,GRADE,BAND,Date Joined,Cost Center,CTC_Annual"></textarea>
+  <div class="note">Your sheet is already baked into this page &mdash; you only need this box to point it somewhere else. Paste a normal address-bar URL (<span class="mono">&hellip;/edit#gid=&hellip;</span>) or a published CSV link; it is converted automatically and <b>remembered on this browser until you change it again</b>. The sheet must be shared <b>Anyone with the link &rarr; Viewer</b>, and the header must be row 1.</div>
+  <div style="margin-top:18px;display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap"><button class="btn" id="resetData">&#8634; Reset to default sheet</button><button class="btn" data-close>Cancel</button><button class="btn primary" id="applyData">Save &amp; load</button></div>
+</div></div></div>
 
 <script>
-/* ---------- Plain UI, wired immediately so the page is never dead even if Firebase is slow or blocked. ---------- */
-const $ = s => document.querySelector(s);
-function say(t,k){ const m=$('#msg'); m.textContent=t; m.className='msg on '+k; }
-function nope(t){ say(t,'bad'); const b=$('#box'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+/* ================= CONFIG ================= */
+/* Offline snapshot of the employee master (used only if the live sheet cannot be reached). */
+const EMBEDDED = `Employee Number,Name,STATUS,Date Of Birth,Gender,Location,Department,Sub Department,Job Title,GRADE,BAND,Date Joined,Cost Center,CTC_Annual
+BH00741,DEEPAK SISODIYA,resignee,2026-08-28,Male,Agra,SOURCING,QUALITY,SENIOR EXECUTIVE - QUALITY AUDITOR,Senior Executive,JUNIOR,2026-08-05,SRC-QLT-104,
+BH00398,VIJAYKUMAR G PRAJAPATI,ACTIVE,1979-04-17,Male,Ahmedabad,REVENUE,MBO,MANAGER-SALES WEST,Manager,MID,2025-11-01,REV-MB0-604,
+BH00586,SMITA KUMARI,ACTIVE,1999-07-21,Female,Ahmedabad,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-05-15,REV-VM-603,
+BH00560,DINESH SINGH,ACTIVE,1991-07-02,Male,Airia Mall,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-04-20,RTL-STR-1200,
+BH00606,SANJOG KUMAR MISHRA,ACTIVE,2000-12-07,Male,Airia Mall,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-05-21,RTL-STR-1200,
+BH00609,AJAY SHARMA,ACTIVE,2002-09-18,Male,Airia Mall,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-05-29,RTL-STR-1200,
+BH00616,RUCHESH YADAV,ACTIVE,2001-06-03,Male,Airia Mall,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-06-01,RTL-STR-1200,
+BH00627,SAKSHI .,ACTIVE,2006-01-29,Female,Airia Mall,RETAIL,RETAIL,FASHION CONSULTANT,RETAIL,,2026-06-05,RTL-STR-1200,
+BH00629,Chinku .,ACTIVE,2003-10-12,Male,Airia Mall,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-06-06,RTL-STR-1200,
+BH00504,BHARTI BABULAL GAYKWAD,ACTIVE,2002-09-17,Female,Amanora,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-02-07,RTL-STR-1200,
+BH00507,NAGESH LAXMAN SAKHARE,ACTIVE,1995-11-15,Male,Amanora,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-02-06,RTL-STR-1200,
+BH00508,AKANKSHA URKUDE,ACTIVE,2003-07-07,Female,Amanora,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-02-10,RTL-STR-1200,
+BH00517,UMAKANTA MUKHERJEE,ACTIVE,2000-12-31,Male,Amanora,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-02-07,RTL-STR-1200,
+BH00521,ABHINAV KUMAR SINGH,ACTIVE,1991-10-24,Male,Amanora,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-03-08,RTL-STR-1200,
+BH00740,KARAN .,ACTIVE,1994-12-18,Male,Amanora,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-08-03,REV-VM-603,
+BH00489,ASHOKA KUMAR PRADHAN,ACTIVE,1998-05-12,Male,Attibelle Store,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-01-27,RTL-STR-1200,
+BH00491,SANGITA DEKA,ACTIVE,1999-03-23,Female,Attibelle Store,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-01-27,RTL-STR-1200,
+BH00497,PRADEEP KUMAR BARAL,ACTIVE,2001-03-18,Male,Attibelle Store,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-01-31,RTL-STR-1200,
+BH00520,AISHWARYA .,ACTIVE,2005-06-06,Female,Attibelle Store,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-03-09,RTL-STR-1200,
+BH00628,AKASH SINHA,ACTIVE,2000-06-29,Male,Attibelle Store,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-06-05,RTL-STR-1200,
+BH00691,SIDHYANTA DAS,ACTIVE,2002-06-28,Male,Attibelle Store,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-07-09,RTL-STR-1200,
+BH00702,Naorem Seitamjit Meitei,ACTIVE,1999-12-10,Male,Attibelle Store,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-07-13,RTL-STR-1200,
+BH00302,KAMAL MIA,ACTIVE,1998-05-30,Male,Banjara Hills,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2025-07-01,RTL-STR-1200,
+BH00414,TELUGU JEEVAN,ACTIVE,2001-11-03,Male,Banjara Hills,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-12-01,RTL-STR-1200,
+BH00451,G DEEPAK SINGH,ACTIVE,2001-05-16,Male,Banjara Hills,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2025-12-02,RTL-STR-1200,
+BH00467,SURESH JOGU,ACTIVE,1997-11-27,Male,Banjara Hills,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-01-01,RTL-STR-1200,
+BH00758,CHAITHRESH PUTTALOLU,ACTIVE,2005-11-19,Male,Banjara Hills,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-08-11,RTL-STR-1200,
+BH00234,SUHANA TASKEEN,ACTIVE,2004-09-30,Female,Bhartiya City,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2025-01-20,RTL-STR-1200,
+BH00235,DEEPAK A,ACTIVE,1996-05-08,Male,Bhartiya City,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-01-20,RTL-STR-1200,
+BH00236,SAJID HUSSAIN SHAIKH,ACTIVE,1992-02-05,Male,Bhartiya City,RETAIL,RETAIL STORE,ASSISTANT STORE MANAGER,RETAIL,,2025-01-10,RTL-STR-1200,
+BH00480,RAHUL KAYAL,ACTIVE,2002-10-08,Male,Bhartiya City,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-01-18,RTL-STR-1200,
+BH00522,TAPENDRA GIRI,ACTIVE,2008-02-13,Male,Bhartiya City,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-03-09,RTL-STR-1200,
+BH00737,KUMARI NANDITA,ACTIVE,1999-08-18,Female,Bhubaneswar,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-08-03,REV-VM-603,
+BH00349,GOVINDRAM GANESHARAM CHOUDHARI,ACTIVE,2000-11-07,Male,Bhumi World,RETAIL,RETAIL STORE,ASSISTANT STORE MANAGER,RETAIL,,2025-09-01,RTL-STR-1200,
+BH00743,KARTAR SINGH,ACTIVE,2006-06-20,Male,Bhumi World,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-08-05,RTL-STR-1200,
+BH00751,RAHUL NILESH,ACTIVE,1992-08-23,Male,Bhumi World,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-08-03,,
+BH00768,Jay Harimohan Chavan,ACTIVE,2004-09-01,Male,Bhumi World,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-08-15,,
+BH00701,ASHISH KUMAR,ACTIVE,2001-06-21,Male,"Centro, Patna",REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-07-14,REV-VM-603,
+BH00384,HEMALATHA S,ACTIVE,1998-03-10,Female,Chikajala Bangalore,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-10-17,RTL-STR-1200,
+BH00423,PRIYANKA DAS,ACTIVE,1999-10-01,Female,Chikajala Bangalore,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-12-23,RTL-STR-1200,
+BH00481,SARAT BARMAN,ACTIVE,2005-02-12,Male,Chikajala Bangalore,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-01-09,RTL-HKP-1201,
+BH00548,JAGADISH L,ACTIVE,1993-11-24,Male,Chikajala Bangalore,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-03-30,RTL-STR-1200,
+BH00554,ZEESHAN .,ACTIVE,2004-10-03,Male,Chikajala Bangalore,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-04-09,RTL-STR-1200,
+BH00661,Alfa Banu,ACTIVE,2001-02-10,Female,Chikajala Bangalore,RETAIL,RETAIL,SENIOR FASHION CONSULTANT,RETAIL,,2026-06-26,RTL-STR-1200,
+BH00681,Sinam Tulshipriya Devi,ACTIVE,2005-03-04,Female,Chikajala Bangalore,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-07-05,RTL-STR-1200,
+BH00749,KRISHNA GUPTA,ACTIVE,2000-08-23,Male,"DB Mall, Bhopal",RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-08-06,RTL-STR-1200,
+BH00754,Vanshika Gautam,ACTIVE,1999-03-29,Female,"DB Mall, Bhopal",RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-08-10,RTL-STR-1200,
+BH00755,Umar Khan,ACTIVE,2002-01-12,Male,"DB Mall, Bhopal",RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-08-10,RTL-STR-1200,
+BH00764,TABISH MOHDTABISH,ACTIVE,2003-10-08,Male,"DB Mall, Bhopal",RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-08-17,,
+BH00769,MONU MAHAWAR,ACTIVE,1994-10-18,Male,"DB Mall, Bhopal",RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-08-12,RTL-STR-1200,
+BH00651,AVDHESH KUMAR SHAKYA,ACTIVE,1993-04-21,Male,Delhi,SOURCING,QUALITY,SENIOR EXECUTIVE - QUALITY AUDITOR,Senior Executive,JUNIOR,2026-06-22,SRC-QLT-104,
+BH00760,HARSHITA SETHIA,ACTIVE,2002-12-22,Female,Delhi,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-08-12,REV-VM-603,
+BH00426,SOURABH BOSE,ACTIVE,1979-07-05,Male,East Region,REVENUE,SIS,ASSISTANT MANAGER - CLUSTER MANAGER,ASSISTANT MANAGER,JUNIOR,2025-12-01,REV-SIS-605,
+BH00403,PRABAKARAN .,ACTIVE,1995-05-17,Male,Express Avenue Chennai,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2025-11-05,RTL-STR-1200,
+BH00503,SWATHI A,ACTIVE,1995-05-10,Female,Express Avenue Chennai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-02-02,RTL-HKP-1201,
+BH00519,SAMIULLAH SHARIFF N M D,ACTIVE,2001-04-13,Male,Express Avenue Chennai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-03-08,RTL-STR-1200,
+BH00684,MOHAMMED TOHEED,ACTIVE,2005-09-22,Male,Express Avenue Chennai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-07-06,RTL-STR-1200,
+BH00718,Sakthivel T,ACTIVE,2002-09-09,Male,Express Avenue Chennai,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-16,RTL-STR-1200,
+BH00765,MOHMMAD UMAR,ACTIVE,2007-03-21,Male,Express Avenue Chennai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-08-17,RTL-STR-1200,
+BH00538,RAHUL LOUCHAV,ACTIVE,1992-06-15,Male,Felix Plaza,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-03-23,RTL-STR-1200,
+BH00539,KUNAL VERMA,ACTIVE,2005-01-15,Male,Felix Plaza,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-03-23,RTL-STR-1200,
+BH00699,Sabir Ali,ACTIVE,2004-07-12,Male,Felix Plaza,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-07-10,RTL-STR-1200,
+BH00714,Lokesh .,ACTIVE,2001-11-28,Male,Felix Plaza,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-20,RTL-STR-1200,
+BH00736,TENZIN CHOIJE,ACTIVE,1994-09-05,Male,Guwahati,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-08-03,REV-VM-603,
+BH00565,ANANTHU KUNIYIL CHANDRAN,ACTIVE,1991-12-25,Male,Hilite Mall Calicut,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-05-06,RTL-STR-1200,
+BH00506,ARUN KUMAR PS,ACTIVE,2004-06-18,Male,Hilite Mall Calicut,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-02-02,RTL-HKP-1201,
+BH00541,ROHITH K,ACTIVE,1996-05-20,Male,Hilite Mall Calicut,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-03-05,RTL-STR-1200,
+BH00544,SAMYUKTHA C,ACTIVE,2002-03-26,Female,Hilite Mall Calicut,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-03-26,RTL-STR-1200,
+BH00553,SABEEL FOUZ,ACTIVE,2002-10-10,Male,Hilite Mall Calicut,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-04-10,RTL-STR-1200,
+BH00633,KEERTHI REDDY T,ACTIVE,1986-07-15,Female,"Himayatnagar, Hyderabad",RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-06-08,RTL-STR-1200,
+BH00645,SAHIL BATRA,ACTIVE,2001-02-21,Male,"Himayatnagar, Hyderabad",RETAIL,RETAIL STORE,ASSISTANT STORE MANAGER,RETAIL,,2026-06-15,RTL-STR-1200,
+BH00686,Preet Vishwakarma,ACTIVE,2002-04-18,Female,"Himayatnagar, Hyderabad",RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-07-05,RTL-STR-1200,
+BH00690,Ajay Raj,ACTIVE,2003-08-07,Male,"Himayatnagar, Hyderabad",RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-09,RTL-STR-1200,
+BH00696,MOHD SALIK,ACTIVE,2004-03-29,Male,"Himayatnagar, Hyderabad",RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-07-10,RTL-STR-1200,
+BH00698,Mukesh Chaupal,ACTIVE,2000-01-01,Male,"Himayatnagar, Hyderabad",RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-09,RTL-STR-1200,
+BH00705,Chowdary Sai Kummari,ACTIVE,1997-10-16,Male,"Himayatnagar, Hyderabad",RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-07-11,RTL-STR-1200,
+BH00716,SHAIK AIJAZ,ACTIVE,2003-03-15,Male,"Himayatnagar, Hyderabad",RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-07-20,RTL-STR-1200,
+BH00722,NAKKA VAISHNAVI,ACTIVE,2002-12-02,Female,"Himayatnagar, Hyderabad",RETAIL,RETAIL STORE,RETAIL MANAGEMENT TRAINEE,RETAIL,,2026-07-27,RTL-STR-1200,
+BH00731,Ganjikunta Pravallika,ACTIVE,2004-07-24,Female,"Himayatnagar, Hyderabad",RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-08-01,RTL-STR-1200,
+BH00759,RANJEET .,ACTIVE,2006-01-01,Male,"Himayatnagar, Hyderabad",RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-08-11,RTL-STR-1200,
+BH00368,SANJANA VERMA,ACTIVE,2004-07-02,Female,Janakpuri store,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2025-10-16,RTL-STR-1200,
+BH00387,DEEPAK SHARMA,ACTIVE,1995-12-01,Male,Janakpuri store,RETAIL,RETAIL STORE,ASSISTANT STORE MANAGER,RETAIL,,2025-10-28,RTL-STR-1200,
+BH00471,POONAM GILL,ACTIVE,2001-08-16,Female,Janakpuri store,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-01-10,RTL-STR-1200,
+BH00472,ABHISHEK .,ACTIVE,2000-05-28,Male,Janakpuri store,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-01-10,RTL-STR-1200,
+BH00473,ASHISH .,ACTIVE,1993-04-15,Male,Janakpuri store,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-01-10,RTL-STR-1200,
+BH00474,KUMAR PAL,ACTIVE,1995-12-12,Male,Janakpuri store,RETAIL,RETAIL HOUSEKEEPING,FASHION CONSULTANT,RETAIL,,2026-01-10,RTL-HKP-1201,
+BH00475,SHANI KUMAR SINGH,ACTIVE,2007-10-26,Male,Janakpuri store,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-01-10,RTL-STR-1200,
+BH00476,KHUSHBU .,ACTIVE,2002-08-15,Female,Janakpuri store,RETAIL,RETAIL STORE,STORE VISUAL MERCHANDISER,RETAIL,,2026-01-12,REV-VM-603,
+BH00482,SUMIT BABBAR,ACTIVE,1991-09-13,Male,Janakpuri store,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-01-18,RTL-STR-1200,
+BH00483,HANSHIKA .,ACTIVE,2005-10-18,Female,Janakpuri store,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-01-15,RTL-STR-1200,
+BH00487,SIKESH KUMAR,ACTIVE,2005-02-01,Male,Janakpuri store,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-01-21,RTL-HKP-1201,
+BH00488,SANTOSH KUMAR,ACTIVE,1998-01-10,Male,Janakpuri store,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-01-22,RTL-HKP-1201,
+BH00505,SACHIN .,ACTIVE,2005-02-24,Male,Janakpuri store,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-02-01,RTL-HKP-1201,
+BH00607,Vicky Soni,ACTIVE,1999-01-01,Male,Janakpuri store,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-05-24,RTL-STR-1200,
+BH00652,DILSHAD ALAM,ACTIVE,1995-02-12,Male,Janakpuri store,RETAIL,RETAIL STORE,STORE VISUAL MERCHANDISER,RETAIL,,2026-06-22,RTL-STR-1200,
+BH00659,ASHISH KANOJIA,ACTIVE,1998-05-07,Male,Janakpuri store,RETAIL,RETAIL,SENIOR FASHION CONSULTANT,RETAIL,,2026-06-25,RTL-STR-1200,
+BH00682,UTKARSH MAURYA,ACTIVE,2001-01-19,Male,Janakpuri store,RETAIL,RETAIL STORE,ASSISTANT STORE MANAGER,RETAIL,,2026-07-06,RTL-STR-1200,
+BH00585,DIPAK BISWAL,ACTIVE,1996-05-29,Male,Kolkata,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-05-15,REV-VM-603,
+BH00346,MOHAMMED SHANAWAZ,ACTIVE,2003-11-07,Male,Lakesore Mall Hyderabad,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2025-09-12,RTL-STR-1200,
+BH00415,MAHUA BISWAS,ACTIVE,1991-12-26,Female,Lakesore Mall Hyderabad,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2025-11-21,RTL-STR-1200,
+BH00428,NARAHARI BEHERA,ACTIVE,2002-04-10,Male,Lakesore Mall Hyderabad,RETAIL,RETAIL,STOCK BOY,RETAIL,,2025-11-26,RTL-STR-1200,
+BH00432,ANIRUDH YADAV,ACTIVE,2003-05-05,Male,Lakesore Mall Hyderabad,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-12-05,RTL-STR-1200,
+BH00594,IMRAN KHAN,ACTIVE,1992-01-02,Male,Lakesore Mall Hyderabad,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-05-18,RTL-STR-1200,
+BH00694,SAHIL Sahil MISHRA,ACTIVE,2002-09-18,Male,Lakesore Mall Hyderabad,RETAIL,RETAIL,FASHION CONSULTANT,RETAIL,,2026-07-10,RTL-STR-1200,
+BH00717,NAIKOTI SATHISH,ACTIVE,2004-09-13,Male,Lakesore Mall Hyderabad,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-19,RTL-STR-1200,
+BH00771,Dangeti Dharani,ACTIVE,2002-10-19,Female,Lakesore Mall Hyderabad,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-08-18,RTL-STR-1200,
+BH00646,Kavita Yadav,ACTIVE,1996-06-28,Female,"Linking Road, Mumbai",REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-06-15,REV-VM-603,
+BH00332,MONIKA SIWAKOTI,ACTIVE,2004-07-09,Female,Lulu Mall Bangalore,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2025-09-01,RTL-STR-1200,
+BH00362,KRISHNA GAUTAM,ACTIVE,2001-11-01,Male,Lulu Mall Bangalore,RETAIL,RETAIL STORE,ASSISTANT STORE MANAGER,RETAIL,,2025-09-28,RTL-STR-1200,
+BH00388,ARTI YADAV,ACTIVE,2003-01-28,Female,Lulu Mall Bangalore,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2025-10-26,RTL-STR-1200,
+BH00496,HARISH R,ACTIVE,2002-03-25,Male,Lulu Mall Bangalore,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-01-31,RTL-STR-1200,
+BH00542,MD AFTAR HUSSAIN,ACTIVE,2005-10-12,Male,Lulu Mall Bangalore,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-03-05,RTL-STR-1200,
+BH00550,MAHESH B,ACTIVE,1999-03-10,Male,Lulu Mall Bangalore,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-04-06,RTL-STR-1200,
+BH00697,EAMAD UDDIN,ACTIVE,1999-01-01,Male,Lulu Mall Bangalore,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-10,RTL-STR-1200,
+BH00747,SAMYUKTHA S,ACTIVE,2004-09-28,Female,Lulu Mall Bangalore,RETAIL,RETAIL STORE,RETAIL MANAGEMENT TRAINEE,RETAIL,,2026-08-06,RTL-STR-1200,
+BH00420,SHIVAM BHATIA,ACTIVE,2005-02-28,Male,Mall of Faridabad,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-11-24,RTL-STR-1200,
+BH00421,RAKESH .,ACTIVE,1995-07-28,Male,Mall of Faridabad,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-11-18,RTL-STR-1200,
+BH00617,DHRUV SINGH,ACTIVE,2004-08-31,Male,Mall of Faridabad,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-06-01,RTL-STR-1200,
+BH00630,Sandip Kumar,ACTIVE,2001-04-20,Male,Mall of Faridabad,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-06-06,RTL-STR-1200,
+BH00683,Gourabh .,ACTIVE,2006-01-01,Male,Mall of Faridabad,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-07,RTL-STR-1200,
+BH00692,RAGINI .,ACTIVE,2006-08-12,Female,Mall of Faridabad,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-07-10,RTL-STR-1200,
+BH00693,BHARTI .,ACTIVE,2007-03-17,Female,Mall of Faridabad,RETAIL,RETAIL,SENIOR FASHION CONSULTANT,RETAIL,,2026-07-10,RTL-STR-1200,
+BH00725,KALPANA KUMARI,ACTIVE,2005-02-27,Female,Mall of Faridabad,RETAIL,RETAIL STORE,RETAIL MANAGEMENT TRAINEE,RETAIL,,2026-07-27,RTL-STR-1200,
+BH00730,ABHILASHA .,ACTIVE,2002-10-15,Female,Mall of Faridabad,RETAIL,RETAIL,SENIOR FASHION CONSULTANT,RETAIL,,2026-08-01,RTL-STR-1200,
+BH00377,ROHIT .,ACTIVE,1999-10-31,Male,North Region,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2025-10-12,REV-VM-603,
+BH00462,PAWAN MISHRA,ACTIVE,1987-04-21,Male,North Region,REVENUE,SIS,ASSISTANT MANAGER - CLUSTER MANAGER,ASSISTANT MANAGER,JUNIOR,2026-01-01,REV-SIS-605,
+BH00527,BAPPA MAJI,ACTIVE,1987-08-16,Male,North Region,REVENUE,EBO,ASSISTANT MANAGER - CLUSTER MANAGER,ASSISTANT MANAGER,JUNIOR,2026-03-16,REV-EBO-606,
+BH00371,ANJALI SHARMA,ACTIVE,2000-08-27,Female,Pacific Mall Jasola,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2025-10-15,RTL-STR-1200,
+BH00370,BHUBAN NEWAR,ACTIVE,2006-10-01,Male,Pacific Mall Jasola,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-10-13,RTL-STR-1200,
+BH00376,NIKKI KUMAR S SINGH,ACTIVE,2003-05-04,Female,Pacific Mall Jasola,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-10-17,RTL-STR-1200,
+BH00386,KHUSHNAM .,ACTIVE,1999-03-12,Male,Pacific Mall Jasola,RETAIL,RETAIL,STOCK BOY,RETAIL,,2025-10-18,RTL-STR-1200,
+BH00547,MAMTA YADAV,ACTIVE,2000-12-08,Female,Pacific Mall Jasola,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-04-01,RTL-STR-1200,
+BH00622,Divya Verma,ACTIVE,1999-08-29,Female,Pacific Mall Jasola,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-06-04,RTL-STR-1200,
+BH00723,MOHINI KUSHWAHA,ACTIVE,2004-01-02,Female,Pacific Mall Jasola,RETAIL,RETAIL STORE,RETAIL MANAGEMENT TRAINEE,RETAIL,,2026-07-27,RTL-STR-1200,
+BH00367,SAKSHI HURIA,ACTIVE,1999-09-12,Female,Phoenix Citadel Mall Indore.,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2025-10-23,RTL-STR-1200,
+BH00406,DIVYA MANDLOI,ACTIVE,1999-10-22,Female,Phoenix Citadel Mall Indore.,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-11-08,RTL-STR-1200,
+BH00536,PRAVESH MALVIYA,ACTIVE,2004-05-02,Male,Phoenix Citadel Mall Indore.,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-03-08,RTL-HKP-1201,
+BH00440,ELAMUKIL .,ACTIVE,2000-01-04,Male,PMC Chennai,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2025-12-02,RTL-STR-1200,
+BH00502,UMA PARAMESWARI V,ACTIVE,2003-07-11,Female,PMC Chennai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-02-10,RTL-STR-1200,
+BH00531,NEIHOI HRANGKHOL,ACTIVE,1999-08-23,Male,PMC Chennai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-03-15,RTL-STR-1200,
+BH00534,K M BIKIPIA,ACTIVE,2003-12-18,Male,PMC Chennai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-03-11,RTL-STR-1200,
+BH00573,VIJAYARAJAN V,ACTIVE,1997-02-06,Male,PMC Chennai,RETAIL,RETAIL STORE,ASSISTANT STORE MANAGER,RETAIL,,2026-05-01,RTL-STR-1200,
+BH00634,Abdul Nur,ACTIVE,2003-01-01,Male,PMC Chennai,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-06-08,RTL-STR-1200,
+BH00335,RUKAIYA SHAIKH,ACTIVE,2007-03-12,Female,PMC Kurla Mumbai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-09-01,RTL-STR-1200,
+BH00336,SALMAN KHAN,ACTIVE,2004-04-23,Male,PMC Kurla Mumbai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-09-01,RTL-STR-1200,
+BH00343,SAPNA RAJESH YADAV,ACTIVE,1999-03-16,Female,PMC Kurla Mumbai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-09-05,RTL-STR-1200,
+BH00373,SHRADDHA DEEPAK MAKESHWAR,ACTIVE,1997-09-25,Female,PMC Kurla Mumbai,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2025-10-14,RTL-STR-1200,
+BH00381,SANDESH ATMARAM CHAVAN,ACTIVE,1999-03-28,Male,PMC Kurla Mumbai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-03-12,RTL-STR-1200,
+BH00382,MOHAMMAD TABREJ,ACTIVE,2004-08-02,Male,PMC Kurla Mumbai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-10-27,RTL-STR-1200,
+BH00477,MD MOSIN SHAIKH,ACTIVE,2006-01-28,Male,PMC Kurla Mumbai,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-01-09,RTL-HKP-1201,
+BH00658,MONU Pal,ACTIVE,2000-07-20,Male,PMC Kurla Mumbai,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-06-23,RTL-STR-1200,
+BH00703,GANESH DINESH JUIKAR,ACTIVE,2001-08-15,Male,PMC Kurla Mumbai,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-07-12,RTL-STR-1200,
+BH00347,RAHUL SINGH,ACTIVE,1995-09-11,Male,Sarath City Hyderabad,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2025-09-12,RTL-STR-1200,
+BH00433,MOHAMMED ABDUL MUBEEN,ACTIVE,1995-12-18,Male,Sarath City Hyderabad,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2025-12-01,RTL-STR-1200,
+BH00450,ASHIR KHAN,ACTIVE,2001-09-01,Male,Sarath City Hyderabad,RETAIL,RETAIL STORE,ASSISTANT STORE MANAGER,RETAIL,,2025-12-12,RTL-STR-1200,
+BH00524,SACHIN PATEKAR,ACTIVE,1999-10-06,Male,Sarath City Hyderabad,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-03-09,RTL-STR-1200,
+BH00529,NINGTHOUKHONGJAM SOLVIA DEVI,ACTIVE,2000-03-03,Female,Sarath City Hyderabad,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-03-10,RTL-STR-1200,
+BH00613,ALICE SWATI KUJUR,ACTIVE,1997-12-18,Female,Sarath City Hyderabad,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-06-01,RTL-STR-1200,
+BH00632,SHUBHAM DHIMAN,ACTIVE,1996-05-09,Male,Sarath City Hyderabad,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-06-06,RTL-STR-1200,
+BH00687,SOHAIL BEIG,ACTIVE,2003-07-18,Male,Sarath City Hyderabad,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-07-08,RTL-STR-1200,
+BH00695,ASHRAF ANSARI,ACTIVE,2006-02-02,Male,Sarath City Hyderabad,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-10,RTL-STR-1200,
+BH00709,KONETI SUGUNA,ACTIVE,1986-10-13,Female,Sarath City Hyderabad,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-16,RTL-STR-1200,
+BH00711,N PRABHAKAR,ACTIVE,1999-04-10,Male,Sarath City Hyderabad,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-17,RTL-STR-1200,
+BH00732,HAIMEE DAS,ACTIVE,1997-05-13,Female,Sarath City Hyderabad,RETAIL,RETAIL STORE,STORE VISUAL MERCHANDISER,RETAIL,,2026-08-01,RTL-STR-1200,
+BH00742,AFSANA .,ACTIVE,2004-03-15,Female,Sarath City Hyderabad,RETAIL,RETAIL STORE,ASSISTANT STORE MANAGER,RETAIL,,2026-08-01,RTL-STR-1200,
+BH00745,Harshitha R G,ACTIVE,2001-06-19,Female,Sarath City Hyderabad,RETAIL,RETAIL STORE,RETAIL MANAGEMENT TRAINEE,RETAIL,,2026-08-06,RTL-STR-1200,
+BH00361,SRISHTI VERMA,ACTIVE,2001-08-08,Female,Sector 17 Chandigarh,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-10-01,RTL-STR-1200,
+BH00323,GAURAV VERMA,ACTIVE,1991-07-30,Male,Sector 17 Chandigarh,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2025-08-11,RTL-STR-1200,
+BH00325,HARSH KORI,ACTIVE,2005-11-24,Male,Sector 17 Chandigarh,RETAIL,RETAIL,STOCK BOY,RETAIL,,2025-08-18,RTL-STR-1200,
+BH00326,NIKHIL MANHAS,ACTIVE,2000-12-26,Male,Sector 17 Chandigarh,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-08-18,RTL-STR-1200,
+BH00327,ABHISHEK MISHRA,ACTIVE,1998-10-08,Male,Sector 17 Chandigarh,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-08-25,RTL-STR-1200,
+BH00468,ROHIT KUMAR,ACTIVE,1998-07-04,Male,Sector 17 Chandigarh,RETAIL,RETAIL,STOCK BOY,RETAIL,,2025-12-27,RTL-HKP-1201,
+BH00667,KASHISH MORWAL,ACTIVE,2004-02-26,Female,Sector 17 Chandigarh,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-07-01,RTL-STR-1200,
+BH00720,MANPREET SINGH,ACTIVE,1997-07-22,Male,Sector 17 Chandigarh,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-07-26,RTL-STR-1200,
+BH00564,KRISHAN KUMAR SHARMA,ACTIVE,1998-08-23,Male,Sector 29 Gurgaon,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-05-01,RTL-STR-1200,
+BH00568,VIKASH .,ACTIVE,2005-11-25,Male,Sector 29 Gurgaon,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-04-28,RTL-STR-1200,
+BH00569,GAUTAM KUMAR,ACTIVE,2004-01-11,Male,Sector 29 Gurgaon,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-04-24,RTL-STR-1200,
+BH00570,ANJALI YADAV,ACTIVE,2003-12-08,Female,Sector 29 Gurgaon,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-05-01,RTL-STR-1200,
+BH00571,CHANCHAL CHAHAR,ACTIVE,2004-06-07,Female,Sector 29 Gurgaon,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-05-01,RTL-STR-1200,
+BH00577,SHIVANSH SINGH,ACTIVE,2004-10-25,Male,Sector 29 Gurgaon,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-04-28,RTL-STR-1200,
+BH00587,NITESH KUMAR,ACTIVE,2000-08-15,Male,Sector 29 Gurgaon,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-05-15,RTL-STR-1200,
+BH00601,Nirmal Prasad Verma,ACTIVE,1990-07-14,Male,Sector 29 Gurgaon,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-05-18,RTL-STR-1200,
+BH00614,ANJALI BISHT,ACTIVE,2002-10-21,Female,Sector 29 Gurgaon,RETAIL,RETAIL STORE,ASSISTANT STORE MANAGER,RETAIL,,2026-06-01,RTL-STR-1200,
+BH00625,KHUSHI KUMARI,ACTIVE,2004-02-24,Female,Sector 29 Gurgaon,RETAIL,RETAIL STORE,STORE VISUAL MERCHANDISER,RETAIL,,2026-06-04,RTL-STR-1200,
+BH00670,Prakhar Chaurasia,ACTIVE,1998-06-15,Male,Sector 29 Gurgaon,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-07-04,RTL-STR-1200,
+BH00708,SHANKAR KUMAR,ACTIVE,1996-01-01,Male,Sector 29 Gurgaon,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-16,RTL-STR-1200,
+BH00710,IYASIN ALI,ACTIVE,1994-03-29,Male,Sector 29 Gurgaon,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-11,RTL-STR-1200,
+BH00724,SWATI UPRETI,ACTIVE,2005-08-10,Female,Sector 29 Gurgaon,RETAIL,RETAIL STORE,RETAIL MANAGEMENT TRAINEE,RETAIL,,2026-07-27,RTL-STR-1200,
+BH00237,SANDEEP J,ACTIVE,1995-07-16,Male,South Region,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE-VM,Senior Executive,JUNIOR,2025-01-10,RTL-STR-1200,
+BH00348,ABHISHEK KUMAR,ACTIVE,2004-01-01,Male,South Region,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2025-09-13,REV-VM-603,
+BH00413,NANDAN PINNAMANENI,ACTIVE,1991-12-25,Male,South Region,REVENUE,EBO,ASSISTANT MANAGER - CLUSTER MANAGER,ASSISTANT MANAGER,JUNIOR,2025-11-15,RTL-STR-1200,
+BH00461,RAJMOHAN MUSAPET,ACTIVE,1988-02-28,Male,South Region,REVENUE,SIS,ASSISTANT MANAGER - CLUSTER MANAGER,ASSISTANT MANAGER,JUNIOR,2026-01-03,REV-SIS-605,
+BH00572,JAGADISH G,ACTIVE,1990-03-21,Male,South Region,REVENUE,SIS,ASSISTANT MANAGER - CLUSTER MANAGER,ASSISTANT MANAGER,JUNIOR,2026-05-07,REV-SIS-605,
+BH00424,P. GOPINATH,ACTIVE,2000-07-19,Male,The Bear House HQ,IT,IT,ASSISTANT MANGER-IT,ASSISTANT MANAGER,JUNIOR,2025-11-26,IT-800,
+BH0001,HARSH JAYESH SOMAIYA,ACTIVE,1990-04-03,Male,The Bear House HQ,PROMOTERS OFFICE,PROMOTERS OFFICE,CO-DIRECTOR,DIRECTOR,SENIOR,2017-01-13,PO-1100,
+BH0005,SAMEENA BANU,ACTIVE,1993-12-05,Female,The Bear House HQ,SOURCING,RAW MATERIAL,MANAGER-SOURCING,MANAGER,MID,2020-03-18,SRC-RM-102,
+BH0009,JAYESH SOMAIYA,ACTIVE,1961-02-14,Male,The Bear House HQ,PROMOTERS OFFICE,PROMOTERS OFFICE,MANAGER-ADMIN,MANAGER,MID,2022-06-01,PO-1100,
+BH0011,SWAMY L N,ACTIVE,1979-06-24,Male,The Bear House HQ,SOURCING,QUALITY,MANAGER-TECHNICIAN,MANAGER,MID,2021-04-06,SRC-QLT-104,
+BH00111,VINOTH KUMAR A,ACTIVE,1994-07-17,Male,The Bear House HQ,SOURCING,QUALITY,EXECUTIVE-QUALITY,EXECUTIVE,JUNIOR,2023-08-02,SRC-QLT-104,
+BH00134,SHOUKKATHALI S,ACTIVE,1977-05-10,Male,The Bear House HQ,SOURCING,QUALITY,MANAGER-QUALITY,MANAGER,MID,2023-12-06,SRC-QLT-104,
+BH00141,SYED SAQEEB,ACTIVE,1994-01-15,Male,The Bear House HQ,REVENUE,SIS,SENIOR MANAGER-SIS,SENIOR MANAGER,MID,2024-01-10,REV-SIS-605,
+BH00159,ASHWINI N,ACTIVE,1994-07-04,Female,The Bear House HQ,REVENUE,ECOM,SENIOR EXECUTIVE- CATALOG,Senior Executive,JUNIOR,2024-03-07,REV-ECM-601,
+BH00160,GOKKUL PRASATH A,ACTIVE,1991-07-29,Male,The Bear House HQ,REVENUE,ECOM,SENIOR EXECUTIVE- CATALOG,Senior Executive,JUNIOR,2024-03-13,REV-ECM-601,
+BH00167,DINESH S,ACTIVE,1994-03-24,Male,The Bear House HQ,REVENUE,CRM,MANAGER-SUPPLY CHAIN,MANAGER,MID,2024-04-15,REV-SCM-602,
+BH00169,YOGESH N,ACTIVE,1990-07-07,Male,The Bear House HQ,REVENUE,ECOM,ASSISTANT MANAGER- MARKETPLACE OPERATIONS,ASSISTANT MANAGER,JUNIOR,2024-04-01,REV-ECM-601,
+BH00171,ALOK RANJAN JENA,ACTIVE,1999-01-01,Male,The Bear House HQ,REVENUE,ERP,ASSISTANT MANAGER-ERP,ASSISTANT MANAGER,JUNIOR,2024-05-10,REV-ERP-608,
+BH00172,NAGARAJU H M,ACTIVE,1977-06-16,Male,The Bear House HQ,SOURCING,PRODUCT DEVELOPMENT (CAD),MANAGER-TECHNICIAN,MANAGER,MID,2024-05-05,SRC-PD-103,
+BH00174,AARUSHI LAL,ACTIVE,1997-12-11,Female,The Bear House HQ,MARKETING,BRAND MARKETING,ASSISTANT MANAGER-BRAND MARKETING,ASSISTANT MANAGER,JUNIOR,2024-05-27,MKT-BM-201,
+BH00178,THOMAS R,ACTIVE,1986-08-01,Male,The Bear House HQ,SOURCING,QUALITY,EXECUTIVE-QUALITY,EXECUTIVE,JUNIOR,2024-06-03,SRC-QLT-104,
+BH00181,NAYANA S,ACTIVE,1995-08-23,Female,The Bear House HQ,CRM,CRM,MANAGER-CRM,MANAGER,MID,2024-06-10,CRM-400,
+BH00185,NAGARAJ MUDLA,ACTIVE,1982-09-24,Male,The Bear House HQ,SOURCING,MERCHANDISING,SENIOR EXECUTIVE-MERCHANDISING,Senior Executive,JUNIOR,2024-07-02,SRC-MER-101,
+BH00518,DHILEPAN. R,ACTIVE,1988-11-12,Male,The Bear House HQ,REVENUE,ECOM,DGM- ECOMMERCE,DGM,SENIOR,2026-03-09,REV-ECM-601,
+BH00187,UDAY K N,ACTIVE,1992-05-31,Male,The Bear House HQ,SOURCING,PRODUCT DEVELOPMENT (CAD),EXECUTIVE - PATTERN MASTER,EXECUTIVE,JUNIOR,2024-07-03,SRC-PD-103,
+BH00304,ANSHUL KHANDELWAL,ACTIVE,1989-04-22,Male,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,DGM- RETAIL OPS AND VM,DGM,SENIOR,2025-07-05,REV-VM-603,
+BH00191,SHALINI GUBBI ASHOK KUMAR NAYAKA,ACTIVE,1988-10-25,Female,The Bear House HQ,CRM,CRM,SENIOR EXECUTIVE-CRM,Senior Executive,JUNIOR,2024-07-18,CRM-400,
+BH00192,MOHAMMED MUZAMIL,ACTIVE,1987-02-25,Male,The Bear House HQ,CRM,CRM,SENIOR EXECUTIVE-CRM,Senior Executive,JUNIOR,2024-07-25,CRM-400,
+BH00193,AMIT SINHA,ACTIVE,1978-10-20,Male,The Bear House HQ,REVENUE,MBO,MANAGER-SALES EAST,MANAGER,MID,2024-07-01,REV-MB0-604,
+BH00197,SHEENA NAYAKA S,ACTIVE,1989-04-15,Male,The Bear House HQ,SOURCING,QUALITY,EXECUTIVE-QUALITY,EXECUTIVE,JUNIOR,2024-08-01,SRC-QLT-104,
+BH00201,ANKITA SACHAN,ACTIVE,1998-07-05,Female,The Bear House HQ,DESIGN,WOVEN,SENIOR EXECUTIVE-DESIGN,Senior Executive,JUNIOR,2024-08-23,DSG-WVN-502,
+BH00208,LOKESHA .,ACTIVE,1986-06-01,Male,The Bear House HQ,SOURCING,QUALITY,EXECUTIVE-QUALITY,EXECUTIVE,JUNIOR,2024-10-01,SRC-QLT-104,
+BH00209,RAKESH K M,ACTIVE,1992-09-29,Male,The Bear House HQ,CRM,CRM,EXECUTIVE-CUSTOMER SERVICE,EXECUTIVE,JUNIOR,2024-10-04,CRM-400,
+BH00212,PHIONA JENNIFFER,ACTIVE,1985-03-26,Female,The Bear House HQ,SOURCING,MERCHANDISING,SENIOR EXECUTIVE-MERCHANDISING,Senior Executive,JUNIOR,2024-10-18,SRC-MER-101,
+BH00214,MYLESH BASKAR,ACTIVE,1986-11-23,Male,The Bear House HQ,SOURCING,PLANNING,MANAGER-PLANNING,MANAGER,MID,2024-10-25,SRC-PLN-105,
+BH00221,ANIL LOKHANDE,ACTIVE,1969-11-02,Male,The Bear House HQ,SOURCING,QUALITY,EXECUTIVE-QUALITY,EXECUTIVE,JUNIOR,2024-11-05,SRC-QLT-104,
+BH00223,SUNIL Suni RATHOD,ACTIVE,1994-02-03,Male,The Bear House HQ,SOURCING,QUALITY,EXECUTIVE-QUALITY,EXECUTIVE,JUNIOR,2024-11-18,SRC-QLT-104,
+BH00224,SATISH A,ACTIVE,1981-03-16,Male,The Bear House HQ,SOURCING,QUALITY,EXECUTIVE-QUALITY,EXECUTIVE,JUNIOR,2024-11-18,SRC-QLT-104,
+BH00230,ANAND A,ACTIVE,1984-06-03,Male,The Bear House HQ,SOURCING,PRODUCT DEVELOPMENT (CAD),SENIOR EXECUTIVE-PATTERN MASTER,Senior Executive,JUNIOR,2024-12-20,SRC-PD-103,
+BH00232,GOVIND SAI,ACTIVE,2000-07-27,Male,The Bear House HQ,SOURCING,RAW MATERIAL,EXECUTIVE-SOURCING,EXECUTIVE,JUNIOR,2024-12-25,SRC-RM-102,
+BH00240,SRIDHAR N MURTHY,ACTIVE,1992-01-25,Male,The Bear House HQ,SOURCING,MERCHANDISING,SENIOR EXECUTIVE-MERCHANDISING,Senior Executive,JUNIOR,2025-01-06,SRC-MER-101,
+BH00241,NIRANJAN ROUL,ACTIVE,2003-03-07,Male,The Bear House HQ,REVENUE,ERP,EXECUTIVE-SUPPLY CHAIN ERP,EXECUTIVE,JUNIOR,2025-01-06,REV-ERP-608,
+BH00242,GURUPRASAD SELVARAJ,ACTIVE,1996-02-19,Male,The Bear House HQ,SOURCING,MERCHANDISING,SENIOR EXECUTIVE-MERCHANDISING,Senior Executive,JUNIOR,2025-01-15,SRC-MER-101,
+BH00251,NIKHIL PP,ACTIVE,1996-02-25,Male,The Bear House HQ,DESIGN,DESIGN,SENIOR MANAGER-DESIGN,SENIOR MANAGER,MID,2025-02-17,DSG-500,
+BH00252,SULEKHA Y,ACTIVE,1997-05-20,Female,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,MANAGER- VM (PROPS AND NSO),MANAGER,MID,2026-04-27,The Bear House,
+BH00254,MADHAN KUMAR,ACTIVE,1995-10-19,Male,The Bear House HQ,SOURCING,QUALITY,EXECUTIVE-QUALITY,EXECUTIVE,JUNIOR,2025-03-01,SRC-QLT-104,
+BH00260,HARIPRIEYA M,ACTIVE,2000-11-16,Female,The Bear House HQ,DESIGN,DESIGN,SENIOR EXECUTIVE-DESIGN MERCHANT,Senior Executive,JUNIOR,2025-03-03,DSG-500,
+BH00265,PAVITHRA C R,ACTIVE,1994-09-06,Female,The Bear House HQ,SOURCING,MERCHANDISING,EXECUTIVE-MERCHANDISING,EXECUTIVE,JUNIOR,2025-03-17,SRC-MER-101,
+BH00270,HARPREET SINGH,ACTIVE,1984-09-16,Male,The Bear House HQ,SOURCING,QUALITY,EXECUTIVE-QUALITY,EXECUTIVE,JUNIOR,2025-04-07,SRC-QLT-104,
+BH00289,HEMA S,ACTIVE,2003-03-14,Female,The Bear House HQ,FINANCE,ACCOUNTS PAYABLE,FINANCE EXECUTIVE-AP,EXECUTIVE,JUNIOR,2025-05-28,FIN-AP-301,
+BH00293,MOHANRAM S,ACTIVE,1990-12-08,Male,The Bear House HQ,REVENUE,ECOM,ASSISTANT MANAGER-KEY ACCOUNTS,ASSISTANT MANAGER,JUNIOR,2025-06-09,REV-ECM-601,
+BH00294,KISHORA R,ACTIVE,1985-03-01,Male,The Bear House HQ,SOURCING,QUALITY,SENIOR MANAGER-QUALITY,SENIOR MANAGER,MID,2025-06-09,SRC-QLT-104,
+BH00300,SUMAN DIANA,ACTIVE,1991-08-06,Female,The Bear House HQ,MARKETING,PERFORMACE MARKETING,MANAGER-CUSTOMER RETENTION,MANAGER,MID,2025-07-01,MKT-PM-204,
+BH00301,JAGADISHWARAN GK,ACTIVE,1986-12-10,Male,The Bear House HQ,REVENUE,PLANNING,SENIOR MANAGER-RETAIL PLANNER,SENIOR MANAGER,MID,2025-07-01,REV-PLN-607,
+BH00186,VIKAS MEHRA,ACTIVE,1991-07-25,Male,The Bear House HQ,REVENUE,MBO,DGM-NATIONAL SALES,DGM,SENIOR,2024-07-01,REV-MB0-604,
+BH00306,EHTISHAM ALI SIDDIQUI,ACTIVE,1988-12-14,Male,The Bear House HQ,REVENUE,ECOM,MANAGER-ECOM,MANAGER,MID,2025-07-14,REV-ECM-601,
+BH00307,GOKUL MENON,ACTIVE,1993-11-16,Male,The Bear House HQ,REVENUE,ECOM,MANAGER-ECOM,MANAGER,MID,2025-07-14,REV-ECM-601,
+BH00309,KARTHIK GOUDA,ACTIVE,1993-12-13,Male,The Bear House HQ,REVENUE,ECOM,SENIOR MANAGER-ECOM,SENIOR MANAGER,MID,2025-07-15,REV-ECM-601,
+BH00310,CHETAN SAHGAL,ACTIVE,1988-03-09,Male,The Bear House HQ,REVENUE,EBO,SENIOR MANAGER-RETAIL OPERATIONS,SENIOR MANAGER,MID,2025-07-17,REV-EBO-606,
+BH00312,RUYEZ N,ACTIVE,2000-04-23,Male,The Bear House HQ,CRM,CRM,SENIOR EXECUTIVE - CRM,Senior Executive,JUNIOR,2025-07-29,CRM-400,
+BH00313,SAKSHI ORUGANTI,ACTIVE,1998-06-29,Female,The Bear House HQ,DESIGN,KNITS,SENIOR EXECUTIVE-DESIGN,Senior Executive,JUNIOR,2025-08-04,DSG-KNT-501,
+BH0002,TANVI HARSH SOMAIYA,ACTIVE,1991-12-03,Female,The Bear House HQ,PROMOTERS OFFICE,PROMOTERS OFFICE,DIRECTOR,DIRECTOR,SENIOR,2017-01-13,PO-1100,
+BH00317,NISCHAL S K,ACTIVE,2000-03-24,Male,The Bear House HQ,FINANCE,FINANCE,MANAGER-ACCOUNTS AUDIT AND COMPLIANCE,MANAGER,MID,2025-08-18,FIN-GACC-304,
+BH00320,POOJA BISHT,ACTIVE,1998-09-09,Female,The Bear House HQ,REVENUE,PLANNING,ASSISTANT MANAGER-RETAIL PLANNING,ASSISTANT MANAGER,JUNIOR,2025-08-21,REV-PLN-607,
+BH00339,DIVAS MISHRA,ACTIVE,1988-07-20,Male,The Bear House HQ,REVENUE,SIS,EXECUTIVE-RETAIL OPERATIONS,EXECUTIVE,JUNIOR,2025-09-10,REV-SIS-605,
+BH00344,RAGHU N. S,ACTIVE,1981-04-03,Male,The Bear House HQ,SOURCING,QUALITY,EXECUTIVE-TECHNICIAN,EXECUTIVE,JUNIOR,2025-09-15,SRC-QLT-104,
+BH00345,BHUVANESWARI KAPULURU,ACTIVE,2003-10-02,Female,The Bear House HQ,MARKETING,PERFORMACE MARKETING,EXECUTIVE-DATA ANALYST,EXECUTIVE,JUNIOR,2025-09-15,MKT-PM-204,
+BH00350,JAGATH BHASI,ACTIVE,1996-01-27,Male,The Bear House HQ,FOUNDERS OFFICE,FOUNDERS OFFICE,MANAGER-FOUNDERS OFFICE,MANAGER,MID,2025-09-22,FO-1000,
+BH00356,NIDHI MAITHANI,ACTIVE,1999-12-08,Female,The Bear House HQ,REVENUE,PLANNING,ASSISTANT MANAGER-OFFLINE MERCHANDISING,ASSISTANT MANAGER,JUNIOR,2025-10-01,REV-PLN-607,
+BH00357,SURYA R,ACTIVE,1998-12-12,Male,The Bear House HQ,MARKETING,CREATIVE MARKETING,EXECUTIVE-IMAGE EDITOR,EXECUTIVE,JUNIOR,2025-10-06,MKT-CM-203,
+BH00358,VANI NIGAM,ACTIVE,2000-11-22,Female,The Bear House HQ,MARKETING,CREATIVE MARKETING,EXECUTIVE-STLYLIST,EXECUTIVE,JUNIOR,2025-10-06,MKT-CM-203,
+BH00359,DIKSHA SRIVASTAVA,ACTIVE,1995-01-18,Female,The Bear House HQ,MARKETING,BRAND MARKETING,MANAGER-BRAND MARKETING,MANAGER,MID,2025-10-06,MKT-BM-201,
+BH00360,KARTIK AHLUWALIA,ACTIVE,1982-11-10,Male,The Bear House HQ,REVENUE,REVENUE,GENERAL MANAGER - RETAIL PROJECTS & BD,GM,SENIOR,2025-10-06,REV-600,
+BH00366,SAAIKIRAN GOUD G,ACTIVE,1999-10-13,Male,The Bear House HQ,REVENUE,ECOM,SENIOR EXECUTIVE-CATALOG,Senior Executive,JUNIOR,2025-10-15,REV-ECM-601,
+BH00375,MAYURI SAMAD,ACTIVE,1998-11-17,Female,The Bear House HQ,MARKETING,BRAND MARKETING,MANAGER-INFLUENER MARKETING,MANAGER,MID,2025-10-22,MKT-BM-201,
+BH0039,ANIL KUMAR K,ACTIVE,1990-08-30,Male,The Bear House HQ,FINANCE,BUSINESS FINANCE,SENIOR MANAGER-FINANCE,SENIOR MANAGER,MID,2022-11-14,FN-BF-303,
+BH00392,PRIYANKA JAYAPRAKASH,ACTIVE,2001-10-15,Female,The Bear House HQ,REVENUE,T & D,ASSISTANT MANAGER- TRAINING AND DEVELOPMENT,ASSISTANT MANAGER,JUNIOR,2025-11-03,REV-VM-603,
+BH00397,DIVYANEE SONI,ACTIVE,1997-09-07,Female,The Bear House HQ,MARKETING,CREATIVE MARKETING,SENIOR EXECUTIVE-GRAPHIC DESIGNER,Senior Executive,JUNIOR,2025-11-10,MKT-CM-203,
+BH00399,MAKARAND DESHPANDE,ACTIVE,1989-07-06,Male,The Bear House HQ,REVENUE,EBO,SENIOR MANAGER- RETAIL PROJECTS AND PROCUREMENT,SENIOR MANAGER,MID,2025-11-17,REV-EBO-606,
+BH00400,KRITI LAL,ACTIVE,1994-09-01,Female,The Bear House HQ,HUMAN RESOURCE,HUMAN RESOURCE,SENIOR MANAGER-HR,SENIOR MANAGER,MID,2025-11-17,HR-900,
+BH00401,SIVASANKAR A,ACTIVE,2003-05-26,Male,The Bear House HQ,FINANCE,ACCOUNTS RECEIVABLE,ASSISTANT MANAGER-FINANCE AR,ASSISTANT MANAGER,JUNIOR,2025-11-17,FIN-AR-302,
+BH0041,VIMAL KUMAR RAO N,ACTIVE,1985-12-18,Male,The Bear House HQ,REVENUE,ECOM,SENIOR MANAGER-SALES AND OPS,SENIOR MANAGER,MID,2022-04-27,REV-ECM-601,
+BHOO640,G Pradeep,ACTIVE,1994-05-31,Male,The Bear House HQ,ADMIN,ADMIN,DRIVER,EXECUTIVE,JUNIOR,2026-06-01,ADM-700,
+BH00425,ANKIT GARIA,ACTIVE,2002-09-11,Male,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,ASSISTANT MANAGER- VM (CREATIVE AND SPACE PLANNING),ASSISTANT MANAGER,JUNIOR,2025-12-01,REV-VM-603,
+BH0044,VINOTH KUMAR,ACTIVE,1992-11-30,Male,The Bear House HQ,REVENUE,PLANNING,ASSISTANT MANAGER- BUSINESS MIS,ASSISTANT MANAGER,JUNIOR,2022-06-01,REV-PLN-607,
+BH00443,JAYATREE BANERJEE,ACTIVE,1998-06-15,Female,The Bear House HQ,REVENUE,SUPPLY CHAIN MANAGEMENT,SENIOR EXECUTIVE-SUPPLY CHAIN,Senior Executive,JUNIOR,2025-12-15,REV-SCM-602,
+BH00456,PRAKASH KUMAR THAPA,ACTIVE,2000-12-18,Male,The Bear House HQ,REVENUE,ERP,EXECUTIVE - ERP,EXECUTIVE,JUNIOR,2025-12-01,REV-ERP-608,
+BH00457,LEKKALA VENGALA REDDY,ACTIVE,2002-07-07,Male,The Bear House HQ,SOURCING,RAW MATERIAL,EXECUTIVE-SOURCING,EXECUTIVE,JUNIOR,2025-12-27,SRC-RM-102,
+BH00458,JYOTI KANTA MALLICK,ACTIVE,1999-12-17,Male,The Bear House HQ,REVENUE,ERP,EXECUTIVE-ERP ADMIN,EXECUTIVE,JUNIOR,2025-12-19,REV-ERP-608,
+BH00459,SAUREBH VERMA,ACTIVE,1984-12-29,Male,The Bear House HQ,FINANCE,BUSINESS FINANCE,GENERAL MANAGER-FINANCE CONTROLLER,GM,SENIOR,2026-01-02,FN-BF-303,
+BH00460,UNNIMAYA BHASKARAN,ACTIVE,2000-01-28,Female,The Bear House HQ,DESIGN,KNITS,EXECUTIVE GRAPHIC DESIGNER,EXECUTIVE,JUNIOR,2026-01-02,DSG-KNT-501,
+BH00479,SITARA VINOD,ACTIVE,2002-05-07,Female,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,EXECUTIVE- VISUAL MERCHENDISER,EXECUTIVE,JUNIOR,2026-01-01,REV-VM-603,
+BH00486,SHEKHAR KUMAR SWAIN,ACTIVE,1993-12-22,Male,The Bear House HQ,MARKETING,MARKETING,SENIOR MANAGER-RETAIL MARKETING,SENIOR MANAGER,MID,2026-01-28,MKT-RM-202,
+BH00492,V SARAVANAN,ACTIVE,1976-04-05,Male,The Bear House HQ,SOURCING,QUALITY,EXECUTIVE-QUALITY,EXECUTIVE,JUNIOR,2026-03-06,SRC-QLT-104,
+BH00493,PRANJITA BISHT,ACTIVE,1990-01-13,Female,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,MANAGER- VM (STYLING AND MERCHANDISING),MANAGER,MID,2026-03-06,REV-VM-603,
+BH00499,JUBIN DUA,ACTIVE,1999-01-21,Male,The Bear House HQ,FINANCE,BUSINESS FINANCE,ASSISTANT MANAGER-BUSINESS FINANCE,ASSISTANT MANAGER,JUNIOR,2026-02-16,FN-BF-303,
+BH00500,SANKALP KHARE,ACTIVE,1986-04-02,Male,The Bear House HQ,SOURCING,SOURCING,GENERAL MANAGER-SOURCING (NON-APPAREL),GM,SENIOR,2026-02-16,SRC-100,
+BH00561,SRIDHAR NUNAVAT,ACTIVE,1985-01-26,Male,The Bear House HQ,REVENUE,SUPPLY CHAIN MANAGEMENT,HEAD- SUPPLY CHAIN,GM,SENIOR,2026-04-28,REV-SCM-602,
+BH00528,SATYAKAM MANOHAR CHAVAN,ACTIVE,1986-06-15,Male,The Bear House HQ,REVENUE,ERP,SENIOR MANAGER-ERP,SENIOR MANAGER,MID,2026-03-20,REV-ERP-608,
+BH00540,GOURAV RAO,ACTIVE,1991-03-15,Male,The Bear House HQ,MARKETING,PERFORMACE MARKETING,SENIOR MANAGER- PERFORMANCE MARKETING,SENIOR MANAGER,MID,2026-03-26,MKT-PM-204,
+BH00558,GEETHANJALI ANAND,ACTIVE,2001-02-03,Female,The Bear House HQ,DESIGN,ACCESSORY,SENIOR EXECUTIVE-FOOTWEAR DESIGNER,Senior Executive,JUNIOR,2026-04-23,DSG-AD-503,
+BH00559,PRADEEP K P,ACTIVE,2001-04-07,Male,The Bear House HQ,FINANCE,ACCOUNTS RECEIVABLE,EXECUTIVE-AR,EXECUTIVE,JUNIOR,2026-04-27,FIN-AR-302,
+BH00188,ROHITKANT PRASAD,ACTIVE,1986-12-14,Male,The Bear House HQ,REVENUE,REVENUE,HEAD-BRAND,HEAD-BRAND,SENIOR,2024-07-08,REV-600,
+BH00562,AKSHARA B,ACTIVE,2002-06-13,Female,The Bear House HQ,HUMAN RESOURCE,HUMAN RESOURCE,SENIOR EXECUTIVE-HR,Senior Executive,JUNIOR,2026-05-04,HR-900,
+BH00563,P. V. D. S. V. RAMANA,ACTIVE,2002-04-16,Male,The Bear House HQ,SOURCING,QUALITY,SENIOR EXECUTIVE - QUALITY AUDITOR,Senior Executive,JUNIOR,2026-05-05,SRC-QLT-104,
+BH00574,DEEPAK K,ACTIVE,1988-04-06,Male,The Bear House HQ,REVENUE,PLANNING,MANAGER-RETAIL PLANNER,MANAGER,MID,2026-05-11,REV-PLN-607,
+BH00575,GULSAN PRARUP,ACTIVE,1997-03-15,Male,The Bear House HQ,MARKETING,BRAND MARKETING,MANAGER-DIGITAL MARKETING,MANAGER,MID,2026-05-11,MKT-BM-201,
+BH00576,Ashok Kumar,ACTIVE,1985-06-06,Male,The Bear House HQ,SOURCING,RAW MATERIAL,SENIOR MANAGER- FABRIC SOURCING,SENIOR MANAGER,MID,2026-05-11,SRC-RM-102,
+BH00579,Priyanka H M,ACTIVE,1996-05-27,Female,The Bear House HQ,REVENUE,PLANNING,SENIOR EXECUTIVE- DATA ANALYST,Senior Executive,JUNIOR,2026-05-13,REV-PLN-607,
+BH00580,PRAVESH KUMAR PANDEY,ACTIVE,1998-07-03,Male,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-05-13,REV-VM-603,
+BH00581,MANSI GOSWAMI,ACTIVE,2001-01-30,Female,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-05-13,REV-VM-603,
+BH00582,PRAVEEN PANWAR,ACTIVE,2000-10-09,Male,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-05-13,REV-VM-603,
+BH00583,Harsha Rudroju,ACTIVE,2000-11-05,Male,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-05-13,REV-VM-603,
+BH00584,GEETIMA JAIN,ACTIVE,2003-08-07,Female,The Bear House HQ,REVENUE,ECOM,EXECUTIVE- QUICKCOMMERCE,EXECUTIVE,JUNIOR,2026-05-15,REV-ECM-601,
+BH00588,YELLARAJU C,ACTIVE,2000-02-11,Male,The Bear House HQ,SOURCING,PRODUCT DEVELOPMENT (CAD),EXECUTIVE- CAD,EXECUTIVE,JUNIOR,2026-05-15,SRC-QLT-104,
+BH0059,E SURESH,ACTIVE,1991-05-06,Male,The Bear House HQ,SOURCING,MERCHANDISING,ASSISTANT MANAGER-MERCHANDISING,ASSISTANT MANAGER,JUNIOR,2022-09-07,SRC-MER-101,
+BH00592,Mukunda V M,ACTIVE,1993-05-23,Male,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,MANAGER- ARCHITECT,MANAGER,MID,2026-05-18,REV-VM-603,
+BH00216,PADMAVATHI .,ACTIVE,1986-02-22,Female,The Bear House Laggere,ADMIN,ADMIN,HELPER,EXECUTIVE,JUNIOR,2024-10-07,ADM-700,
+BH0060,RADHA ARUL,ACTIVE,1989-03-05,Female,The Bear House HQ,SOURCING,MERCHANDISING,EXECUTIVE-MERCHANDISING,EXECUTIVE,JUNIOR,2026-08-01,SRC-MER-101,
+BH00631,NISHMETHA A. S,ACTIVE,2002-01-10,Female,The Bear House HQ,SOURCING,SOURCING,JUNIOR MERCHANDISER,EXECUTIVE,JUNIOR,2026-06-08,SRC-MER-101,
+BH00605,Anand V. V,ACTIVE,1998-04-09,Male,The Bear House HQ,DESIGN,DESIGN,Senior Executive-Bottomswear Designer,Senior Executive,JUNIOR,2026-05-25,DSG-500,
+BH00608,Aman More,ACTIVE,2002-06-07,Male,The Bear House HQ,HUMAN RESOURCE,HUMAN RESOURCE,SENIOR EXECUTIVE-HR,Senior Executive,JUNIOR,2026-05-28,HR-900,
+BH00610,ANKUSH KUMAR,ACTIVE,1999-09-07,Male,The Bear House HQ,MARKETING,PERFORMACE MARKETING,ASSISTANT MANAGER- SHOPIFY DEVELOPER,ASSISTANT MANAGER,JUNIOR,2026-06-01,MKT-PM-204,
+BH00618,H Devaraju,ACTIVE,1993-05-06,Male,The Bear House HQ,FINANCE,ACCOUNTS RECEIVABLE,SENIOR EXECUTIVE-AR,Senior Executive,JUNIOR,2026-06-02,FIN-AR-302,
+BH00619,Deepak Kumar Bagora,ACTIVE,1982-03-03,Male,The Bear House HQ,REVENUE,MBO,AREA MANAGER- MBO,MANAGER,MID,2026-06-01,REV-MB0-604,
+BH00626,S. P. THANGARAJ,ACTIVE,1995-04-15,Male,The Bear House HQ,SOURCING,QUALITY,SENIOR EXECUTIVE - QUALITY AUDITOR,Senior Executive,JUNIOR,2026-06-05,SRC-QLT-104,
+BH00593,ADITYA BHOTIKA,ACTIVE,1997-01-17,Male,The Bear House HQ,FINANCE,ACCOUNTS PAYABLE,SENIOR FINANCE EXCEUTIVE-AP,Senior Executive,JUNIOR,2026-05-18,FIN-AP-301,
+BH00635,Mohan P,ACTIVE,1988-01-08,Male,The Bear House HQ,SOURCING,MERCHANDISING,ASSISTANT MANAGER - MERCHANDISER,ASSISTANT MANAGER,JUNIOR,2026-06-10,SRC-MER-101,
+BH00637,PRITHVIRAJ PILLAI,ACTIVE,2002-04-24,Male,The Bear House HQ,MARKETING,CREATIVE MARKETING,ASSISTANT MANAGER-VIDEO EDITOR,ASSISTANT MANAGER,JUNIOR,2026-06-11,MKT-CM-203,
+BH00641,DIVYA N S,ACTIVE,1997-10-26,Female,The Bear House HQ,CRM,CRM,SENIOR EXECUTIVE - CRM,Senior Executive,JUNIOR,2026-06-15,CRM-400,
+BH00643,JINS THOMAS,ACTIVE,1997-01-26,Male,The Bear House HQ,CRM,CRM,SENIOR EXECUTIVE - CRM,Senior Executive,JUNIOR,2026-06-15,CRM-400,
+BH00644,SAAKSHI KAMBLE,ACTIVE,2004-02-28,Female,The Bear House HQ,DESIGN,KNITS,MANAGEMENT TRAINEE - DESIGN,Management Trainee,JUNIOR,2026-06-15,DSG-500,
+BH00647,KATAKAM SARANYA,ACTIVE,2005-06-14,Female,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,MANAGEMENT TRAINEE - VM,Management Trainee,JUNIOR,2026-06-16,REV-VM-603,
+BH00648,Vandana A R,ACTIVE,1998-06-30,Female,The Bear House HQ,FINANCE,ACCOUNTS RECEIVABLE,SENIOR EXECUTIVE - ACCOUNTS RECEIVABLE,Senior Executive,JUNIOR,2026-06-17,FIN-AR-302,
+BH00649,Shamanth G,ACTIVE,1997-10-20,Male,The Bear House HQ,FINANCE,Taxation,Assistant Manager- Taxation,ASSISTANT MANAGER,JUNIOR,2026-06-19,FIN-CTL-305,
+BH00650,AKSHAY RAJAK,ACTIVE,1992-01-26,Male,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,MANAGER- RETAIL PROJECTS,MANAGER,MID,2026-06-22,RTL-PRJ-1800,
+BH00655,APOORVA MISHRA,ACTIVE,2000-12-25,Female,The Bear House HQ,REVENUE,REVENUE,SENIOR EXECUTIVE- QUICK COMMERCE,Senior Executive,JUNIOR,2026-06-24,REV-ECM-601,
+BH00656,NIKITA RAI,ACTIVE,2001-04-20,Female,The Bear House HQ,DESIGN,KNITS,ASSISTANT MANAGER- GRAPHIC DESIGNER,ASSISTANT MANAGER,JUNIOR,2026-06-24,DSG-KNT-501,
+BH00660,Rohit Hansaria,ACTIVE,1991-01-25,Male,The Bear House HQ,FINANCE,ACCOUNTS RECEIVABLE,ASSISTANT MANAGER- ACCOUNTS RECEIVABLE,ASSISTANT MANAGER,JUNIOR,2026-06-29,FIN-AR-302,
+BH00663,RAMBABU V,ACTIVE,1995-07-21,Male,The Bear House HQ,SOURCING,MERCHANDISING,ASSISTANT MANAGER - KNITS,ASSISTANT MANAGER,JUNIOR,2026-07-01,SRC-MER-101,
+BH00664,SANGNA SINGH,ACTIVE,2003-05-20,Female,The Bear House HQ,CRM,CRM,EXECUTIVE - CRM,EXECUTIVE,JUNIOR,2026-07-01,CRM-400,
+BH00665,USHA JAYARAM,ACTIVE,1981-05-05,Female,The Bear House HQ,SOURCING,MERCHANDISING,ASSISTANT MANAGER - MERCHANDISER,ASSISTANT MANAGER,JUNIOR,2026-07-01,SRC-MER-101,
+BH00668,HARSHA ARORA,ACTIVE,2004-05-07,Female,The Bear House HQ,DESIGN,DESIGN,MANAGEMENT TRAINEE - DESIGN,Management Trainee,JUNIOR,2026-07-01,DSG-500,
+BH00669,MUSKAN SHARMA,ACTIVE,2002-03-15,Female,The Bear House HQ,BUYING AND PRODUCT,BUYING AND PRODUCT,Management Trainee - Buying,Management Trainee,JUNIOR,2026-07-01,BUY-1100,
+BH0067,DEVARAJ K R,ACTIVE,1985-08-24,Male,The Bear House HQ,FINANCE,ACCOUNTS PAYABLE,FINANCE EXECUTIVE-AP,EXECUTIVE,JUNIOR,2022-11-02,FIN-AP-301,
+BH00671,KRISHNA GAIKWAD,ACTIVE,1996-02-13,Male,The Bear House HQ,REVENUE,ERP,SENIOR EXECUTIVE- ERP,Senior Executive,JUNIOR,2026-07-06,REV-ERP-608,
+BH00672,Gayatri Lokhande,ACTIVE,2003-05-18,Female,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,MANAGEMENT TRAINEE - VM (CREATIVE & SPACE PLANNING),Management Trainee,JUNIOR,2026-07-06,REV-VM-603,
+BH00673,Jasmeet Kaur,ACTIVE,2004-04-01,Female,The Bear House HQ,MARKETING,CREATIVE MARKETING,MANAGEMENT TRAINEE - MARKETING,Management Trainee,JUNIOR,2026-07-06,REV-VM-603,
+BH00674,IRMAA ANJARIA,ACTIVE,2001-11-29,Female,The Bear House HQ,REVENUE,REVENUE,MANAGEMENT TRAINEE - REVENUE,Management Trainee,JUNIOR,2026-07-06,REV-600,
+BH00675,ABHA BARBARE,ACTIVE,2004-10-19,Female,The Bear House HQ,DESIGN,DESIGN,MANAGEMENT TRAINEE - DESIGN,Management Trainee,JUNIOR,2026-07-06,DSG-500,
+BH00676,BHARATRAJ R K,ACTIVE,2002-05-29,Male,The Bear House HQ,REVENUE,PLANNING,MANAGEMENT TRAINEE - PLANNING,Management Trainee,JUNIOR,2026-07-06,REV-PLN-607,
+BH00677,Srushti Palmur,ACTIVE,2003-10-28,Female,The Bear House HQ,REVENUE,T & D,MANAGEMENT TRAINEE - VM (T&D),Management Trainee,JUNIOR,2026-07-06,REV-VM-603,
+BH00678,KKOMAL SIPAANI,ACTIVE,2004-01-07,Female,The Bear House HQ,REVENUE,T & D,MANAGEMENT TRAINEE - VM (T&D),Management Trainee,JUNIOR,2026-07-06,REV-VM-603,
+BH00679,SHRUTHI C,ACTIVE,2003-08-08,Female,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,MANAGEMENT TRAINEE - VM (PROPS),Management Trainee,JUNIOR,2026-07-06,REV-VM-603,
+BH00680,NITHYASRI LAKSHMI S,ACTIVE,2003-08-07,Female,The Bear House HQ,REVENUE,T & D,MANAGEMENT TRAINEE - VM (T&D),Management Trainee,JUNIOR,2026-07-06,REV-VM-603,
+BH00685,DEEPAK SENGAR,ACTIVE,1999-06-09,Male,The Bear House HQ,DESIGN,DESIGN,SENIOR EXECUTIVE - FASHION DESIGNER,Senior Executive,JUNIOR,2026-07-08,DSG-500,
+BH00700,VISHAL MANDHOTRA,ACTIVE,1997-07-26,Male,The Bear House HQ,REVENUE,ERP,Assistant Manager - ERP,ASSISTANT MANAGER,JUNIOR,2026-07-13,REV-ERP-608,
+BH00704,Rishab Khanuja,ACTIVE,2003-09-18,Male,The Bear House HQ,FOUNDERS OFFICE,FOUNDERS OFFICE,SENIOR MANAGER- FOUNDER'S OFFICE,SENIOR MANAGER,MID,2026-07-15,FO-1000,
+BH00706,Fardeen Khan N,ACTIVE,1999-09-23,Male,The Bear House HQ,CRM,CRM,SENIOR EXECUTIVE - CRM,Senior Executive,JUNIOR,2026-07-16,CRM-400,
+BH00721,Prem Kumar Singh,ACTIVE,1989-02-04,Male,The Bear House HQ,RETAIL PROJECTS,RETAIL PROJECTS,EXECUTIVE - RETAIL PROJECTS,EXECUTIVE,JUNIOR,2026-07-27,RTL-PRJ-1800,
+BH00726,DEEPSIKHA SINGHA,ACTIVE,2000-05-01,Female,The Bear House HQ,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-07-29,REV-VM-603,
+BH00727,GOWTHAM D,ACTIVE,2001-04-17,Male,The Bear House HQ,MARKETING,RETAIL MARKETING,ASSISTANT MANAGER- RETAIL MARKETING,ASSISTANT MANAGER,JUNIOR,2026-08-01,MKT-RM-202,
+BH00728,Priyansh Rastogi,ACTIVE,2001-11-25,Male,The Bear House HQ,REVENUE,EBO,SENIOR EXECUTIVE – RETAIL ANALYST,Senior Executive,JUNIOR,2026-08-01,REV-EBO-606,
+BH00729,NAVEED ZAHUR PAWASKAR,ACTIVE,1990-05-27,Male,The Bear House HQ,REVENUE,EBO,ASSISTANT MANAGER - CLUSTER MANAGER,ASSISTANT MANAGER,JUNIOR,2026-08-01,REV-EBO-606,
+BH00733,Pooja Jangid,ACTIVE,1992-01-25,Female,The Bear House HQ,FINANCE,ACCOUNTS PAYABLE,ASSISTANT MANAGER - ACCOUNTS PAYABLE,ASSISTANT MANAGER,JUNIOR,2026-08-03,FIN-AP-301,
+BH00734,Gnanaprakasam Ramamoorthi,ACTIVE,1987-04-10,Male,The Bear House HQ,SOURCING,FABRIC SOURCING,SENIOR EXECUTIVE- FABRIC SOURCING,Senior Executive,JUNIOR,2026-08-03,SRC-RM-102,
+BH00735,ASHISH TOMAR,ACTIVE,1981-11-16,Male,The Bear House HQ,SOURCING,SOURCING,GENERAL MANAGER - SOURCING,GM,SENIOR,2026-08-03,SRC-100,
+BH00738,SUDHIR BEHERA,ACTIVE,1993-08-04,Male,The Bear House HQ,REVENUE,EBO,ASSISTANT MANAGER - CLUSTER MANAGER,ASSISTANT MANAGER,JUNIOR,2026-08-03,REV-EBO-606,
+BH00739,SYED UMAR FAROOQ,ACTIVE,1990-03-24,Male,The Bear House HQ,REVENUE,EBO,ASSISTANT MANAGER - CLUSTER MANAGER,ASSISTANT MANAGER,JUNIOR,2026-08-03,REV-EBO-606,
+BH00753,M. MOHAN BABU,ACTIVE,1991-02-25,Male,The Bear House HQ,FINANCE,ACCOUNTS PAYABLE,SENIOR EXECUTIVE - ACCOUNTS PAYABLE,Senior Executive,JUNIOR,2026-08-10,FIN-AP-301,
+BH00756,G Ravi Kumar,ACTIVE,1996-06-30,Male,The Bear House HQ,FINANCE,"Corporate Tax, Treasury and Legal",SENIOR EXECUTIVE - ACCOUNTS PAYABLE,Senior Executive,JUNIOR,2026-08-11,FIN-CTL-305,
+BH00762,YOGANANDA VANKA,ACTIVE,1989-08-22,Male,The Bear House HQ,REVENUE,EBO,ASSISTANT MANAGER - CLUSTER MANAGER,ASSISTANT MANAGER,JUNIOR,2026-08-15,REV-EBO-606,
+BH00767,ANJALI ANILKUMAR,ACTIVE,2002-05-31,Female,The Bear House HQ,DESIGN,DESIGN (TECH PACK),EXECUTIVE - DESIGN (TECH PACK),EXECUTIVE,JUNIOR,2026-08-18,DSG-500,
+BH00770,Vidhi Jain,ACTIVE,2000-06-02,Female,The Bear House HQ,FINANCE,FP&A & TREASURY,ASSISTANT MANAGER - FP&A & TREASURY,ASSISTANT MANAGER,JUNIOR,2026-08-20,FN-BF-303,
+BH00772,SUJIT KUMAR SINGH,ACTIVE,1990-05-08,Male,The Bear House HQ,REVENUE,MBO,ASSISTANT MANAGER - CLUSTER MANAGER,ASSISTANT MANAGER,JUNIOR,2026-08-20,REV-MB0-604,
+BH00773,BHAGWAN DASARE,ACTIVE,1984-09-04,Male,The Bear House HQ,SOURCING,TECHNICAL,SENIOR EXECUTIVE - PATTERN MASTER,Senior Executive,JUNIOR,2026-08-24,SRC-PD-103,
+BH0078,RAVI BHUSHAN S,ACTIVE,1982-09-26,Male,The Bear House HQ,SOURCING,PLANNING,MANAGER-PLANNING,MANAGER,MID,2025-01-09,SRC-PLN-105,
+BH0080,SHRADHA SAJEEV,ACTIVE,1999-03-10,Female,The Bear House HQ,MARKETING,BRAND MARKETING,EXECUTIVE-GRAPHIC DESIGNER,EXECUTIVE,JUNIOR,2023-02-01,MKT-BM-201,
+BH0081,NAVEEN P S,ACTIVE,1996-04-18,Male,The Bear House HQ,SOURCING,QUALITY,EXECUTIVE-QUALITY,EXECUTIVE,JUNIOR,2023-02-06,SRC-QLT-104,
+BH0086,ARUN KUMAR UV,ACTIVE,1986-05-15,Male,The Bear House HQ,SOURCING,QUALITY,MANAGER-QUALITY,MANAGER,MID,2023-03-01,SRC-QLT-104,
+BH0091,AKSHAY KUMAR,ACTIVE,2000-06-16,Male,The Bear House HQ,SOURCING,MERCHANDISING,EXECUTIVE-MERCHANDISING,EXECUTIVE,JUNIOR,2023-04-03,SRC-MER-101,
+BH0092,SANTHOSH KUMAR B,ACTIVE,1980-08-28,Male,The Bear House HQ,SOURCING,MERCHANDISING,MANAGER-MERCHANDISING,MANAGER,MID,2023-04-10,SRC-MER-101,
+BH0098,VIJAY KUMAR KS,ACTIVE,1985-08-18,Male,The Bear House HQ,SOURCING,PRODUCT DEVELOPMENT (CAD),EXECUTIVE - PATTERN MASTER,EXECUTIVE,JUNIOR,2023-06-07,SRC-PD-103,
+BHOO639,MADHURI RAMINENI,ACTIVE,1999-07-15,Female,The Bear House HQ,REVENUE,ERP,SENIOR EXECUTIVE- ERP,Senior Executive,JUNIOR,2026-06-12,REV-ERP-608,
+BH00316,BRUNDA KULKARNI V,ACTIVE,1999-01-30,Female,The Bear House HQ,FINANCE,ACCOUNTS RECEIVABLE,SENIOR FINANCE EXCUTIVE- AR,Senior Executive,JUNIOR,2025-08-18,FIN-AR-302,
+BH00352,SANIDHYA S,ACTIVE,2000-01-10,Female,The Bear House Kormangala Store,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-09-17,RTL-STR-1200,
+BH00369,BITU CHETRY,ACTIVE,2000-03-05,Male,The Bear House Kormangala Store,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2025-10-15,RTL-STR-1200,
+BH00409,AMAR JYOTI MAZUMDAR,ACTIVE,1997-10-28,Male,The Bear House Kormangala Store,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2025-11-11,RTL-STR-1200,
+BH00416,SWATI .,ACTIVE,2003-03-01,Female,The Bear House Kormangala Store,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2025-11-10,RTL-STR-1200,
+BH00513,SAM PRITI DEBBARMA,ACTIVE,1998-03-07,Male,The Bear House Kormangala Store,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-02-20,RTL-HKP-1201,
+BH00516,LUTHUILU RETA,ACTIVE,1999-04-01,Female,The Bear House Kormangala Store,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-02-19,RTL-STR-1200,
+BH00556,ISHWOR .,ACTIVE,2001-03-03,Male,The Bear House Kormangala Store,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-04-09,RTL-STR-1200,
+BH00590,VISHAL B,ACTIVE,2004-04-24,Male,The Bear House Kormangala Store,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-05-15,RTL-STR-1200,
+BH00744,ASHLESHA SINGH,ACTIVE,2005-07-09,Female,The Bear House Kormangala Store,RETAIL,RETAIL STORE,RETAIL MANAGEMENT TRAINEE,RETAIL,,2026-08-06,RTL-STR-1200,
+BH00746,Harshitha L,ACTIVE,2003-05-09,Female,The Bear House Kormangala Store,RETAIL,RETAIL STORE,RETAIL MANAGEMENT TRAINEE,RETAIL,,2026-08-06,RTL-STR-1200,
+BH0003,INDRESH KUMAR VISHWAKARMA,ACTIVE,1992-06-10,Male,The Bear House Laggere,REVENUE,ECOM,EXECUTIVE-RETURNS,EXECUTIVE,JUNIOR,2017-01-13,REV-ECM-601,
+BH0004,MAHIPAL YOGI,ACTIVE,1992-06-01,Male,The Bear House Laggere,REVENUE,ECOM,EXECUTIVE-RETURNS,EXECUTIVE,JUNIOR,2025-05-13,REV-ECM-601,
+BH0006,PALAN MISHRA,ACTIVE,1966-04-15,Male,The Bear House Laggere,ADMIN,ADMIN,EXECUTIVE-ADMIN,EXECUTIVE,JUNIOR,2017-01-13,ADM-700,
+BH00200,SANDEEPA P,ACTIVE,1997-05-20,Male,The Bear House Laggere,SOURCING,QUALITY,WAREHOUSE EXECUTIVE-QA,EXECUTIVE,JUNIOR,2025-06-09,SRC-QLT-104,
+BH00602,LOKESH KUMAR C,ACTIVE,1985-12-25,Male,The Bear House HQ,SOURCING,QUALITY,Senior Garment Technician,SENIOR MANAGER,MID,2026-05-21,SRC-QLT-104,
+BH0029,HARISH T G,ACTIVE,1977-06-19,Male,The Bear House Laggere,ADMIN,ADMIN,MANAGER-ADMIN,MANAGER,MID,2021-07-01,ADM-700,
+BH0046,C P MITHUN,ACTIVE,1983-05-19,Male,The Bear House Laggere,SOURCING,RAW MATERIAL,MANAGER-STORE,MANAGER,MID,2022-06-20,SRC-RM-102,
+BH0047,KRISHNA MURTHY,ACTIVE,1980-01-01,Male,The Bear House Laggere,SOURCING,QUALITY,EXECUTIVE-QUALITY,EXECUTIVE,JUNIOR,2022-07-09,SRC-QLT-104,
+BH0058,RAJESH R,ACTIVE,1986-09-08,Male,The Bear House Laggere,SOURCING,RAW MATERIAL,EXECUTIVE-SOURCING,EXECUTIVE,JUNIOR,2022-09-12,SRC-RM-102,
+BH0061,MOHIT P,ACTIVE,1998-05-06,Male,The Bear House Laggere,SOURCING,RAW MATERIAL,EXECUTIVE-STORE,EXECUTIVE,JUNIOR,2022-10-01,SRC-RM-102,
+BH0064,SHIVAKUMAR M,ACTIVE,1989-02-10,Male,The Bear House Laggere,REVENUE,ECOM,SENIOR EXECUTIVE-RETURNS,Senior Executive,JUNIOR,2022-10-10,REV-ECM-601,
+BH00707,Shivakumar L J,ACTIVE,1983-03-12,Male,The Bear House Laggere,SOURCING,QUALITY,WAREHOUSE QA,EXECUTIVE,JUNIOR,2026-07-15,SRC-QLT-104,
+BH00434,M. VISHNU GOURAV SINGH,ACTIVE,2000-03-29,Male,Toli Chowki,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2025-12-01,RTL-STR-1200,
+BH00620,P. YOUGENDER,ACTIVE,2000-06-14,Male,Toli Chowki,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-06-03,RTL-STR-1200,
+BH00621,Shaik Asjaan,ACTIVE,2004-01-03,Male,Toli Chowki,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-06-03,RTL-STR-1200,
+BH00657,P. Venkatesham,ACTIVE,1992-06-15,Male,Toli Chowki,RETAIL,RETAIL,STORE MANAGER,RETAIL,,2026-06-24,RTL-STR-1200,
+BH00662,Abdul Khader,ACTIVE,2005-12-28,Male,Toli Chowki,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-06-28,RTL-STR-1200,
+BH00712,MOHAMMED IRFAN KHAN,ACTIVE,2005-07-07,Male,Toli Chowki,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-07-18,RTL-STR-1200,
+BHOO638,Syed Lateef,ACTIVE,2003-07-19,Male,Toli Chowki,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-06-11,RTL-STR-1200,
+BH00364,DINESH PUNDIR,ACTIVE,1996-02-26,Male,West Region,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE-VM,Senior Executive,JUNIOR,2025-10-08,REV-VM-603,
+BH00485,AUSTIN MERWYN D'SOUZA,ACTIVE,1995-07-22,Male,West Region,REVENUE,SIS,ASSISTANT MANAGER - CLUSTER MANAGER,ASSISTANT MANAGER,JUNIOR,2026-01-21,REV-SIS-605,
+BH00595,RASHID KHAN,ACTIVE,1997-01-07,Male,West Region,REVENUE,VISUAL MERCHANDSING,SENIOR EXECUTIVE- AREA VM,Senior Executive,JUNIOR,2026-05-18,REV-VM-603,
+BH00526,VISHWANATH S S,ACTIVE,1976-09-24,Male,Whitefield Warehouse,REVENUE,SUPPLY CHAIN MANAGEMENT,MANAGER-WAREHOUSE,MANAGER,MID,2026-03-18,REV-SCM-602,
+BH00546,VIGNESHWARAN L,ACTIVE,1999-05-27,Male,Whitefield Warehouse,REVENUE,SUPPLY CHAIN MANAGEMENT,EXECUTIVE-SUPPLY CHAIN,EXECUTIVE,JUNIOR,2026-04-10,RTL-STR-1200,
+BH00748,DOLLY SAHU,ACTIVE,2006-03-09,Female,"Zora Mall, Raipur",RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-08-10,RTL-STR-1200,
+BH00750,ADITYA KUMAR RAM,ACTIVE,2006-06-13,Male,"Zora Mall, Raipur",RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-08-15,RTL-STR-1200,
+BH00752,Sonalee Gupta,ACTIVE,2000-06-16,Female,"Zora Mall, Raipur",RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-08-06,RTL-STR-1200,
+BH00757,Om Niyal,ACTIVE,2003-11-01,Male,"Zora Mall, Raipur",RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-08-11,RTL-STR-1200,
+BH00761,AISHA KHAN,ACTIVE,2003-02-28,Female,"Zora Mall, Raipur",RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-08-14,,
+BH00596,Aiman Khan,ACTIVE,2001-04-02,Female,Z-Square Mall,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-05-18,RTL-STR-1200,
+BH00597,Shubham Balmiki,ACTIVE,1997-12-09,Male,Z-Square Mall,RETAIL,RETAIL STORE,FASHION CONSULTANT,RETAIL,,2026-05-18,RTL-STR-1200,
+BH00598,SHARAD GAUTAM,ACTIVE,1999-01-01,Male,Z-Square Mall,RETAIL,RETAIL,STOCK BOY,RETAIL,,2026-05-18,RTL-STR-1200,
+BH00599,TWINKLE SINGH,ACTIVE,2001-05-11,Female,Z-Square Mall,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-05-18,RTL-STR-1200,
+BH00600,VARISHA KHANAM,ACTIVE,2000-10-27,Female,Z-Square Mall,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-05-18,RTL-STR-1200,
+BH00611,Maaz Shabbih,ACTIVE,1991-05-05,Male,Z-Square Mall,RETAIL,RETAIL STORE,STORE MANAGER,RETAIL,,2026-06-01,RTL-STR-1200,
+BH00623,VINAY KASHYAP,ACTIVE,1999-04-16,Male,Z-Square Mall,RETAIL,RETAIL STORE,SENIOR FASHION CONSULTANT,RETAIL,,2026-06-04,RTL-STR-1200,`;
+/* Live sheet. A URL saved through admin settings overrides this on that browser. */
+const CSV_URL = "https://docs.google.com/spreadsheets/d/1Pfs9jXl4NkUJebexxPGllsBylCq8u-3jMrkQ-36nNmU/gviz/tq?tqx=out:csv";
+const ADMIN_USER = "VINO";
+const ADMIN_PASSWORD = "BEARBOY2026";
+const LS_KEY = "tbh_people_console_csv_url";
 
-/* why the user landed back here */
-(function(){
-  const q=new URLSearchParams(location.search);
-  if(q.get('timeout'))        say('You were signed out automatically after 10 minutes of inactivity. Please sign in again.','info');
-  else if(q.get('signedout')) say('You have been signed out.','info');
-  if(q.has('timeout')||q.has('signedout')) history.replaceState(null,'',location.pathname);
-})();
+/* ================= HELPERS ================= */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const nk=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pickK=(r,ns)=>{for(const n of ns){const v=r.__n[nk(n)];if(v!==undefined&&v!=='')return v}return ''};
+const num=v=>{const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n};
+const fmtN=n=>Math.round(n).toLocaleString('en-IN');
+const fmtINR=n=>{n=Number(n)||0;if(Math.abs(n)>=1e7)return '₹'+(n/1e7).toFixed(2)+' Cr';if(Math.abs(n)>=1e5)return '₹'+(n/1e5).toFixed(1)+' L';return '₹'+fmtN(n)};
+const pct=(a,b)=>b?((a/b)*100).toFixed(1)+'%':'—';
+const z=n=>n?fmtN(n):'<span class="zero">·</span>';
 
-$('#eye').onclick=()=>{ const p=$('#pw'), show=p.type==='password';
-  p.type=show?'text':'password';
-  $('#eye').innerHTML=show?'&#128584;':'&#128065;';
-  $('#eye').title=show?'Hide password':'Show password';
-  p.focus(); };
+const C={red:'#C8102E',red7:'#9B0C23',red9:'#7E1020',red3:'#E4677A',red1:'#EFA3B1',
+         ink:'#1E1E1E',ink2:'#3D3D3D',grey:'#8A8A90',grey2:'#C2C2C8',line:'#EFEFF2',muted:'#6E6E73'};
+const PAL=[C.red,C.ink,C.red3,C.grey,C.red7,C.grey2,C.red1,C.ink2,C.red9,'#B8B8BE'];
+const TODAY=new Date();
 
-$('#em').onkeydown=e=>{ if(e.key==='Enter') $('#pw').focus(); };
-$('#pw').onkeydown=e=>{ if(e.key==='Enter') go(); };
-function go(){ window.__signIn ? window.__signIn() : nope('Still connecting to the sign-in service. Give it a moment and try again.'); }
-$('#go').onclick=go;
-$('#reset').onclick=()=>{ window.__reset ? window.__reset() : nope('Still connecting to the sign-in service. Give it a moment and try again.'); };
-</script>
-
-<script type="module">
-/* ---------- Firebase, loaded separately so a blocked CDN cannot break the form ---------- */
-const firebaseConfig = {
-  apiKey: "AIzaSyAnBRk_EzjEkXGN6Yeh7HrJa-6iNNZb0-g",
-  authDomain: "hr-dashboard-ad102.firebaseapp.com",
-  projectId: "hr-dashboard-ad102",
-  storageBucket: "hr-dashboard-ad102.firebasestorage.app",
-  messagingSenderId: "494269148327",
-  appId: "1:494269148327:web:562d56ff66064e25ae7f82"
-};
-
-const FRIENDLY={
-  'auth/invalid-credential':'That email and password combination is not recognised. Please check both and try again.',
-  'auth/invalid-email':'That does not look like a valid email address.',
-  'auth/user-disabled':'This account has been disabled. Please contact the HR team.',
-  'auth/user-not-found':'No account exists for that email address. HR needs to create the account first.',
-  'auth/wrong-password':'Incorrect password. Please try again or use “Forgot password?”.',
-  'auth/too-many-requests':'Too many failed attempts. For security, please wait a few minutes before trying again.',
-  'auth/network-request-failed':'No connection to the sign-in service. Please check your internet connection.',
-  'auth/unauthorized-domain':'This web address has not been added to the Firebase Authorized domains list yet.',
-  'auth/operation-not-allowed':'Email and password sign-in has not been enabled in the Firebase console yet.'
-};
-
-try{
-  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-  const { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged,
-          setPersistence, browserLocalPersistence }
-    = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
-
-  const auth = getAuth(initializeApp(firebaseConfig));
-  try{ await setPersistence(auth, browserLocalPersistence); }catch(e){ /* private browsing: session-only is fine */ }
-
-  onAuthStateChanged(auth, u => { if (u) location.replace('index.html'); });
-
-  window.__signIn = async function(){
-    const em=$('#em').value.trim(), pw=$('#pw').value;
-    if(!em || !pw) return nope('Please enter both your work email and your password.');
-    $('#go').disabled=true; $('#go').textContent='Signing in…';
-    try{
-      await signInWithEmailAndPassword(auth, em, pw);
-      say('Signed in. Opening the console…','good');
-      $('#go').textContent='Signed in';
-      setTimeout(()=>location.replace('index.html'), 500);
-    }catch(e){
-      nope(FRIENDLY[e.code] || e.message);
-      $('#go').disabled=false; $('#go').textContent='Sign in';
-    }
-  };
-
-  window.__reset = async function(){
-    const em=$('#em').value.trim();
-    if(!em) return nope('Enter your work email address above, then select “Forgot password?”.');
-    try{ await sendPasswordResetEmail(auth, em); say('A password reset link has been sent to '+em+'. Please check your inbox.','good'); }
-    catch(e){ nope(FRIENDLY[e.code] || e.message); }
-  };
-}catch(e){
-  nope('Cannot reach the sign-in service from this network. If you are on office wifi, ask IT to allow gstatic.com and firebaseapp.com.');
+function pDate(v){
+  if(!v)return null;
+  const s=String(v).trim().split(' ')[0];
+  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/); if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if(m){let a=+m[1],b=+m[2];if(a<=12&&b>12){[a,b]=[b,a]}return new Date(+m[3],b-1,a)}
+  const d=new Date(s);return isNaN(d)?null:d;
 }
+const yrsSince=d=>d?(TODAY-d)/(365.25*24*3600*1000):null;
+
+/* --- experience bands --- */
+const TORDER=['Under 6 months','6 months – 1.5 years','1.5 – 3 years','Over 3 years','Unknown'];
+const TCOL={'Under 6 months':C.red1,'6 months – 1.5 years':C.red3,'1.5 – 3 years':C.red,'Over 3 years':C.red9,'Unknown':C.grey2};
+const TSHORT={'Under 6 months':'<6M','6 months – 1.5 years':'6M–1.5Y','1.5 – 3 years':'1.5–3Y','Over 3 years':'3Y+','Unknown':'Unknown'};
+function tBand(y){if(y==null)return 'Unknown';if(y<0.5)return 'Under 6 months';if(y<1.5)return '6 months – 1.5 years';if(y<3)return '1.5 – 3 years';return 'Over 3 years'}
+const AORDER=['Under 25','25–29','30–34','35–39','40–49','50+','Unknown'];
+function aBand(y){if(y==null)return 'Unknown';if(y<25)return 'Under 25';if(y<30)return '25–29';if(y<35)return '30–34';if(y<40)return '35–39';if(y<50)return '40–49';return '50+'}
+
+/* --- GRADE (from the GRADE column) --- */
+const GORDER=['Director','Head / GM / DGM','Senior Manager','Manager','Assistant Manager','Senior Executive','Executive','Management Trainee','Retail','Ungraded'];
+const MGRPLUS=['Director','Head / GM / DGM','Senior Manager','Manager'];
+function normGrade(v){
+  const T=String(v||'').toUpperCase().trim();
+  if(!T)return 'Ungraded';
+  if(/DIRECTOR|FOUNDER|CO-?DIRECTOR/.test(T))return 'Director';
+  if(/\bDGM\b|\bGM\b|GENERAL MANAGER|HEAD|\bVP\b|CHIEF/.test(T))return 'Head / GM / DGM';
+  if(/SENIOR MANAGER|SR\.? ?MANAGER/.test(T))return 'Senior Manager';
+  if(/ASSISTANT MANAGER|ASST\.? ?MANAGER|\bAM\b/.test(T))return 'Assistant Manager';
+  if(/SENIOR EXECUTIVE|SR\.? ?EXECUTIVE/.test(T))return 'Senior Executive';
+  if(/TRAINEE|INTERN/.test(T))return 'Management Trainee';
+  if(/RETAIL|STORE/.test(T))return 'Retail';
+  if(/MANAGER/.test(T))return 'Manager';
+  if(/EXECUTIVE/.test(T))return 'Executive';
+  return T.charAt(0)+T.slice(1).toLowerCase();
+}
+/* --- BAND (from the BAND column) --- */
+const BORDER=['Senior','Mid','Junior','Unbanded'];
+const BCOL={'Senior':C.red9,'Mid':C.red,'Junior':C.red3,'Unbanded':C.grey2};
+function normBand(v){
+  const T=String(v||'').toUpperCase().trim();
+  if(!T)return 'Unbanded';
+  if(/SENIOR|SNR|LEADER/.test(T))return 'Senior';
+  if(/^MID|MIDDLE/.test(T))return 'Mid';
+  if(/JUNIOR|JNR|ENTRY/.test(T))return 'Junior';
+  return T.charAt(0)+T.slice(1).toLowerCase();
+}
+function normGender(v){const s=nk(v);if(['m','male','man','men'].includes(s))return 'Male';if(['f','female','woman','women','fmale'].includes(s))return 'Female';return v?'Other':'Not set'}
+function normStatus(v){return /resign|exit|left|inactive|reliev|separat|terminat/.test(nk(v))?'Resigned':'Active'}
+
+let ROWS=[],CHARTS={},CFGS={},CTC_OK=false;
+
+function parseRows(txt){
+  const p=Papa.parse(txt.trim(),{header:true,skipEmptyLines:true});
+  return p.data.map(r=>{
+    const o={__n:{}};
+    for(const k in r)o.__n[nk(k)]=String(r[k]??'').trim();
+    o.code=pickK(o,['Employee Number','Emp_Code','EmployeeCode','EmpID']);
+    o.name=pickK(o,['Name','Emp_Name']);
+    o.gender=normGender(pickK(o,['Gender','Sex']));
+    o.status=normStatus(pickK(o,['STATUS','Status','Employee Status']));
+    o.locRaw=pickK(o,['Location','Store_Name','Site'])||'—';
+    o.dept=(pickK(o,['Department','Dept','Function'])||'Unassigned').toUpperCase();
+    o.sub=(pickK(o,['Sub Department','Sub_Department','SubDept'])||'—').toUpperCase();
+    o.title=pickK(o,['Job Title','Designation','Title','Role'])||'—';
+    o.cc=pickK(o,['Cost Center','Cost Centre'])||'—';
+    o.doj=pDate(pickK(o,['Date Joined','DOJ','Date of Joining']));
+    o.dob=pDate(pickK(o,['Date Of Birth','DOB']));
+    o.ctc=num(pickK(o,['CTC_Annual','Annual CTC','CTC Annual','Annual Cost','CTC']));
+    o.tenure=yrsSince(o.doj);
+    const ag=yrsSince(o.dob); o.age=(ag==null||ag<15||ag>80)?null:ag;   /* guards a bad DOB */
+    o.tb=tBand(o.tenure);
+    o.grade=normGrade(pickK(o,['GRADE','Grade','Grade Level']));
+    o.band=normBand(pickK(o,['BAND','Band','Band Level']));
+    o.loc = o.dept==='RETAIL' ? 'Offline Retail' : 'HQ';
+    return o;
+  }).filter(r=>r.code||r.name);
+}
+/* CTC is only trusted when it looks like real salary data (not a serial or a flat filler) */
+function checkCTC(rows){
+  const v=rows.map(r=>r.ctc).filter(x=>x>0);
+  if(v.length<5)return false;
+  const uniq=new Set(v).size,srt=[...v].sort((a,b)=>a-b),m=srt[Math.floor(srt.length/2)];
+  const serial=uniq>=v.length*.9&&Math.max(...v)<=v.length+3&&Math.min(...v)<=2;
+  return uniq>=5&&m>=10000&&!serial;
+}
+const COSTNOTE='<div class="flag"><b>Cost figures are switched off.</b> The CTC column in the source sheet is not real salary data yet — one column is a row serial (1, 2, 3…) and the other is a flat value repeated for everyone. Put real annual salary into a single column headed <span class="mono">CTC_Annual</span> and every cost tile, chart and column on this page turns on by itself.</div>';
+function costFlag(sel){const el=$(sel);if(el)el.innerHTML=CTC_OK?'':COSTNOTE}
+
+function agg(rows,keyFn){
+  const m=new Map();
+  rows.forEach(r=>{
+    const k=keyFn(r)||'—';
+    if(!m.has(k))m.set(k,{key:k,act:0,res:0,male:0,female:0,ctc:0,ctcAct:0,ten:[],rows:[],meta:r});
+    const g=m.get(k);g.rows.push(r);g.ctc+=r.ctc;
+    if(r.status==='Resigned')g.res++;
+    else{g.act++;g.ctcAct+=r.ctc;if(r.tenure!=null)g.ten.push(r.tenure);
+      if(r.gender==='Male')g.male++;else if(r.gender==='Female')g.female++}
+  });
+  return [...m.values()];
+}
+const med=a=>{if(!a.length)return null;const s=[...a].sort((x,y)=>x-y),i=Math.floor(s.length/2);return s.length%2?s[i]:(s[i-1]+s[i])/2};
+const medT=g=>{const m=med(g.ten);return m==null?'—':m.toFixed(1)+'y'};
+
+function kpi(el,items){const n=$(el);if(!n)return;
+  n.innerHTML=items.map(i=>`<div class="kpi ${i.t||'a'}"><div class="k">${i.k}</div><div class="v">${i.v}</div><div class="d">${i.d||''}</div></div>`).join('')}
+
+function chart(id,cfg){
+  const el=document.getElementById(id);if(!el)return;
+  CFGS[id]=cfg;if(CHARTS[id])CHARTS[id].destroy();
+  const F={family:'Inter',size:11,weight:'500'};
+  const base={responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:F,color:C.muted,boxWidth:10,boxHeight:10,padding:14,usePointStyle:true,pointStyle:'rectRounded'}},
+      tooltip:{backgroundColor:C.ink,titleFont:{family:'Inter',size:12,weight:'600'},bodyFont:{family:'JetBrains Mono',size:11.5},padding:10,cornerRadius:7,displayColors:true,boxPadding:4}},
+    scales:cfg.type==='doughnut'?undefined:{
+      x:{grid:{color:C.line,drawBorder:false},border:{display:false},ticks:{font:F,color:C.muted}},
+      y:{grid:{color:C.line,drawBorder:false},border:{display:false},ticks:{font:{family:'JetBrains Mono',size:10.5},color:C.muted}}}};
+  cfg.options=Object.assign({},base,cfg.options||{},{plugins:Object.assign({},base.plugins,(cfg.options||{}).plugins||{}),scales:(cfg.options||{}).scales||base.scales});
+  CHARTS[id]=new Chart(el,cfg);
+}
+const B={borderRadius:3,borderWidth:0,maxBarThickness:30};
+const hBar=(l,d,lab,c)=>({type:'bar',data:{labels:l,datasets:[Object.assign({label:lab,data:d,backgroundColor:c||C.red},B)]},options:{indexAxis:'y',plugins:{legend:{display:false}}}});
+const vBar=(l,d,lab,c)=>({type:'bar',data:{labels:l,datasets:[Object.assign({label:lab,data:d,backgroundColor:c||C.red},B)]},options:{plugins:{legend:{display:false}}}});
+const donut=(l,d,c)=>({type:'doughnut',data:{labels:l,datasets:[{data:d,backgroundColor:c||PAL,borderWidth:2,borderColor:'#fff'}]},options:{cutout:'62%',plugins:{legend:{position:'bottom'}}}});
+const stackG=(l,m,f)=>({type:'bar',data:{labels:l,datasets:[
+  Object.assign({label:'Male',data:m,backgroundColor:C.ink,stack:'g'},B),
+  Object.assign({label:'Female',data:f,backgroundColor:C.red,stack:'g'},B)]},
+  options:{indexAxis:'y',scales:{x:{stacked:true,grid:{color:C.line},border:{display:false},ticks:{font:{family:'JetBrains Mono',size:10.5},color:C.muted}},y:{stacked:true,grid:{display:false},border:{display:false},ticks:{font:{family:'Inter',size:11},color:C.muted}}},plugins:{legend:{position:'bottom'}}}});
+
+function table(sel,cols,rows,foot){
+  const el=$(sel);if(!el)return;
+  cols=cols.filter(c=>!c.cost||CTC_OK);
+  el.innerHTML=`<thead><tr>${cols.map((c,i)=>`<th class="${c.n?'n ':''}${i===0?'s':''}">${c.h}</th>`).join('')}</tr></thead>`+
+   `<tbody>${rows.map(r=>`<tr>${cols.map((c,i)=>`<td class="${c.n?'n ':''}${i===0?'s':''}">${c.f(r)}</td>`).join('')}</tr>`).join('')}</tbody>`+
+   (foot?`<tfoot><tr>${cols.map((c,i)=>`<td class="${c.n?'n ':''}${i===0?'s':''}">${foot[c.h]??''}</td>`).join('')}</tr></tfoot>`:'');
+}
+function counts(rows,fn,order){const m={};rows.forEach(r=>{const b=fn(r);m[b]=(m[b]||0)+1});const l=order.filter(k=>m[k]);return[l,l.map(k=>m[k])]}
+const present=(rows,fn,order)=>order.filter(k=>rows.some(r=>fn(r)===k));
+
+/* ================= RENDER ================= */
+function render(){
+  const all=ROWS,act=all.filter(r=>r.status==='Active'),res=all.filter(r=>r.status==='Resigned');
+  CTC_OK=checkCTC(all);['#costFlag1','#costFlag2','#costFlag3','#costFlag4'].forEach(costFlag);
+  const male=act.filter(r=>r.gender==='Male').length,female=act.filter(r=>r.gender==='Female').length;
+  const mTen=med(act.map(r=>r.tenure).filter(x=>x!=null)),mAge=med(act.map(r=>r.age).filter(x=>x!=null));
+  const hqAll=all.filter(r=>r.loc==='HQ'),hqA=hqAll.filter(r=>r.status==='Active');
+  const offAll=all.filter(r=>r.loc==='Offline Retail'),offA=offAll.filter(r=>r.status==='Active');
+  const stores=agg(offAll,r=>r.locRaw).sort((a,b)=>b.act-a.act);
+  const sum=(rs,f)=>rs.reduce((s,r)=>s+(f?f(r):r.ctc),0);
+  const costAll=sum(all),costHQ=sum(hqAll),costRT=sum(offAll),costAct=sum(act),costRes=sum(res);
+
+  /* ---------------- PANEL 1 : ORGANISATION ---------------- */
+  const k1=[
+    {k:'Total Active',v:fmtN(act.length),t:'a',d:`${fmtN(all.length)} records in master`},
+    {k:'Male',v:fmtN(male),t:'b',d:`${pct(male,act.length)} of active`},
+    {k:'Female',v:fmtN(female),t:'c',d:`${pct(female,act.length)} of active`},
+    {k:'Resigned',v:fmtN(res.length),t:'b',d:`Exit rate <b>${pct(res.length,all.length)}</b>`},
+    {k:'HQ',v:fmtN(hqA.length),t:'a',d:`${pct(hqA.length,act.length)} of company`},
+    {k:'Store Staff',v:fmtN(offA.length),t:'c',d:`across <b>${fmtN(stores.filter(s=>s.act>0).length)}</b> stores`},
+    {k:'Median Tenure',v:mTen!=null?mTen.toFixed(1)+'y':'—',t:'b',d:`Median age <b>${mAge!=null?Math.round(mAge):'—'}</b>`}
+  ];
+  if(CTC_OK)k1.push(
+    {k:'Annual Cost (incl. resignees)',v:fmtINR(costAll),t:'a',d:`Avg <b>${fmtINR(all.length?costAll/all.length:0)}</b> per record`},
+    {k:'— HQ Cost',v:fmtINR(costHQ),t:'a',d:`${pct(costHQ,costAll)} of total &middot; ${fmtN(hqAll.length)} records`},
+    {k:'— Retail Cost',v:fmtINR(costRT),t:'c',d:`${pct(costRT,costAll)} of total &middot; ${fmtN(offAll.length)} records`});
+  kpi('#k1',k1);
+
+  const tAgg=TORDER.map(b=>({b,rows:act.filter(r=>r.tb===b)})).filter(x=>x.rows.length);
+  kpi('#kTen',tAgg.map(x=>({k:x.b,v:fmtN(x.rows.length),t:'a',
+    d:`${pct(x.rows.length,act.length)} of active &middot; HQ <b>${x.rows.filter(r=>r.loc==='HQ').length}</b> / Store <b>${x.rows.filter(r=>r.loc!=='HQ').length}</b>`})));
+  let[tl,td]=counts(act,r=>r.tb,TORDER);
+  chart('cTenure',vBar(tl,td,'Employees',tl.map(k=>TCOL[k])));
+  chart('cTenSplit',{type:'bar',data:{labels:tl,datasets:[
+    Object.assign({label:'HQ',data:tl.map(b=>act.filter(r=>r.tb===b&&r.loc==='HQ').length),backgroundColor:C.ink,stack:'s'},B),
+    Object.assign({label:'Offline Retail',data:tl.map(b=>act.filter(r=>r.tb===b&&r.loc!=='HQ').length),backgroundColor:C.red,stack:'s'},B)]},
+    options:{scales:{x:{stacked:true,grid:{display:false},border:{display:false},ticks:{font:{family:'Inter',size:11},color:C.muted}},y:{stacked:true,grid:{color:C.line},border:{display:false},ticks:{font:{family:'JetBrains Mono',size:10.5},color:C.muted}}},plugins:{legend:{position:'bottom'}}}});
+  table('#tTen',[
+    {h:'Experience band',f:r=>`<span class="chip" style="background:${TCOL[r.b]};color:${r.b==='Under 6 months'||r.b==='Unknown'?C.ink:'#fff'}">${r.b}</span>`},
+    {h:'Total',n:1,f:r=>fmtN(r.rows.length)},
+    {h:'% of active',n:1,f:r=>pct(r.rows.length,act.length)},
+    {h:'HQ',n:1,f:r=>z(r.rows.filter(x=>x.loc==='HQ').length)},
+    {h:'Store',n:1,f:r=>z(r.rows.filter(x=>x.loc!=='HQ').length)},
+    {h:'Male',n:1,f:r=>z(r.rows.filter(x=>x.gender==='Male').length)},
+    {h:'Female',n:1,f:r=>z(r.rows.filter(x=>x.gender==='Female').length)},
+    {h:'Female %',n:1,f:r=>pct(r.rows.filter(x=>x.gender==='Female').length,r.rows.length)}
+  ],tAgg,{'Experience band':'TOTAL','Total':fmtN(act.length),'% of active':'100%','HQ':fmtN(hqA.length),'Store':fmtN(offA.length),'Male':fmtN(male),'Female':fmtN(female),'Female %':pct(female,act.length)});
+
+  chart('cGender',donut(['Male','Female'],[male,female],[C.ink,C.red]));
+  chart('cLoc',donut(['HQ','Offline Retail'],[hqA.length,offA.length],[C.ink,C.red]));
+  let[al,ad]=counts(act,r=>aBand(r.age),AORDER);chart('cAge',vBar(al,ad,'Employees',C.red));
+
+  const dept=agg(all,r=>r.dept).sort((a,b)=>b.act-a.act);
+  const maxD=Math.max(...dept.map(d=>d.act),1);
+  table('#tDept',[
+    {h:'Department',f:r=>`<b>${esc(r.key)}</b>`},
+    {h:'Active',n:1,f:r=>`${fmtN(r.act)}<span class="bar"><i style="width:${r.act/maxD*100}%"></i></span>`},
+    {h:'Male',n:1,f:r=>z(r.male)},{h:'Female',n:1,f:r=>z(r.female)},
+    {h:'Female %',n:1,f:r=>pct(r.female,r.act)},
+    {h:'<6M',n:1,f:r=>z(r.rows.filter(x=>x.status==='Active'&&x.tb===TORDER[0]).length)},
+    {h:'6M–1.5Y',n:1,f:r=>z(r.rows.filter(x=>x.status==='Active'&&x.tb===TORDER[1]).length)},
+    {h:'1.5–3Y',n:1,f:r=>z(r.rows.filter(x=>x.status==='Active'&&x.tb===TORDER[2]).length)},
+    {h:'3Y+',n:1,f:r=>z(r.rows.filter(x=>x.status==='Active'&&x.tb===TORDER[3]).length)},
+    {h:'Resigned',n:1,f:r=>z(r.res)},{h:'Exit %',n:1,f:r=>pct(r.res,r.act+r.res)},
+    {h:'Median Tenure',n:1,f:medT},
+    {h:'Annual Cost',n:1,cost:1,f:r=>fmtINR(r.ctc)}
+  ],dept,{'Department':'TOTAL','Active':fmtN(act.length),'Male':fmtN(male),'Female':fmtN(female),'Female %':pct(female,act.length),
+    '<6M':fmtN(act.filter(r=>r.tb===TORDER[0]).length),'6M–1.5Y':fmtN(act.filter(r=>r.tb===TORDER[1]).length),
+    '1.5–3Y':fmtN(act.filter(r=>r.tb===TORDER[2]).length),'3Y+':fmtN(act.filter(r=>r.tb===TORDER[3]).length),
+    'Resigned':fmtN(res.length),'Exit %':pct(res.length,all.length),'Median Tenure':mTen!=null?mTen.toFixed(1)+'y':'—','Annual Cost':fmtINR(costAll)});
+
+  /* ---------------- PANEL 2 : HQ ---------------- */
+  const hqM=hqA.filter(r=>r.gender==='Male').length,hqF=hqA.filter(r=>r.gender==='Female').length;
+  const hqT=med(hqA.map(r=>r.tenure).filter(x=>x!=null));
+  const k2=[
+    {k:'HQ Active',v:fmtN(hqA.length),t:'a',d:`${pct(hqA.length,act.length)} of company`},
+    {k:'Male',v:fmtN(hqM),t:'b',d:pct(hqM,hqA.length)+' of HQ'},
+    {k:'Female',v:fmtN(hqF),t:'c',d:pct(hqF,hqA.length)+' of HQ'},
+    {k:'Resigned',v:fmtN(hqAll.length-hqA.length),t:'b',d:`Exit rate <b>${pct(hqAll.length-hqA.length,hqAll.length)}</b>`},
+    {k:'Departments',v:fmtN(new Set(hqA.map(r=>r.dept)).size),t:'a',d:`${fmtN(new Set(hqA.map(r=>r.sub)).size)} sub-functions`},
+    {k:'Median Tenure',v:hqT!=null?hqT.toFixed(1)+'y':'—',d:`${fmtN(hqA.filter(r=>r.tb===TORDER[0]).length)} joined in last 6 months`,t:'c'}
+  ];
+  if(CTC_OK)k2.push({k:'HQ Annual Cost',v:fmtINR(costHQ),t:'a',d:`${pct(costHQ,costAll)} of company cost`});
+  kpi('#k2',k2);
+
+  /* --- GRADE --- */
+  const gList=present(hqA,r=>r.grade,GORDER).concat([...new Set(hqA.map(r=>r.grade))].filter(g=>!GORDER.includes(g)).sort());
+  const grades=gList.map(g=>({key:g,rows:hqA.filter(r=>r.grade===g)}));
+  kpi('#kGrade',grades.map(g=>({k:g.key,v:fmtN(g.rows.length),t:MGRPLUS.includes(g.key)?'a':(g.key==='Ungraded'?'b':'c'),
+    d:`${pct(g.rows.length,hqA.length)} of HQ &middot; F <b>${g.rows.filter(r=>r.gender==='Female').length}</b>`})));
+  const gMax=Math.max(...grades.map(g=>g.rows.length),1);
+  table('#tGrade',[
+    {h:'Grade',f:g=>`<b>${esc(g.key)}</b>`},
+    {h:'Headcount',n:1,f:g=>`${fmtN(g.rows.length)}<span class="bar"><i style="width:${g.rows.length/gMax*100}%"></i></span>`},
+    {h:'% of HQ',n:1,f:g=>pct(g.rows.length,hqA.length)},
+    {h:'Male',n:1,f:g=>z(g.rows.filter(r=>r.gender==='Male').length)},
+    {h:'Female',n:1,f:g=>z(g.rows.filter(r=>r.gender==='Female').length)},
+    {h:'Female %',n:1,f:g=>pct(g.rows.filter(r=>r.gender==='Female').length,g.rows.length)},
+    {h:'Senior',n:1,f:g=>z(g.rows.filter(r=>r.band==='Senior').length)},
+    {h:'Mid',n:1,f:g=>z(g.rows.filter(r=>r.band==='Mid').length)},
+    {h:'Junior',n:1,f:g=>z(g.rows.filter(r=>r.band==='Junior').length)},
+    {h:'<6M',n:1,f:g=>z(g.rows.filter(r=>r.tb===TORDER[0]).length)},
+    {h:'6M–1.5Y',n:1,f:g=>z(g.rows.filter(r=>r.tb===TORDER[1]).length)},
+    {h:'1.5–3Y',n:1,f:g=>z(g.rows.filter(r=>r.tb===TORDER[2]).length)},
+    {h:'3Y+',n:1,f:g=>z(g.rows.filter(r=>r.tb===TORDER[3]).length)},
+    {h:'Median Tenure',n:1,f:g=>{const m=med(g.rows.map(r=>r.tenure).filter(x=>x!=null));return m==null?'—':m.toFixed(1)+'y'}},
+    {h:'Departments',n:1,f:g=>fmtN(new Set(g.rows.map(r=>r.dept)).size)},
+    {h:'Annual Cost',n:1,cost:1,f:g=>fmtINR(g.rows.reduce((s,r)=>s+r.ctc,0))}
+  ],grades,{'Grade':'TOTAL','Headcount':fmtN(hqA.length),'% of HQ':'100%','Male':fmtN(hqM),'Female':fmtN(hqF),'Female %':pct(hqF,hqA.length),
+    'Senior':fmtN(hqA.filter(r=>r.band==='Senior').length),'Mid':fmtN(hqA.filter(r=>r.band==='Mid').length),'Junior':fmtN(hqA.filter(r=>r.band==='Junior').length),
+    '<6M':fmtN(hqA.filter(r=>r.tb===TORDER[0]).length),'6M–1.5Y':fmtN(hqA.filter(r=>r.tb===TORDER[1]).length),
+    '1.5–3Y':fmtN(hqA.filter(r=>r.tb===TORDER[2]).length),'3Y+':fmtN(hqA.filter(r=>r.tb===TORDER[3]).length),
+    'Median Tenure':hqT!=null?hqT.toFixed(1)+'y':'—','Departments':fmtN(new Set(hqA.map(r=>r.dept)).size),'Annual Cost':fmtINR(sum(hqA))});
+
+  /* --- BAND --- */
+  const bList=present(hqA,r=>r.band,BORDER).concat([...new Set(hqA.map(r=>r.band))].filter(b=>!BORDER.includes(b)).sort());
+  const bands=bList.map(b=>({key:b,rows:hqA.filter(r=>r.band===b)}));
+  kpi('#kBandTiles',bands.map(b=>({k:b.key+' band',v:fmtN(b.rows.length),t:b.key==='Senior'?'a':(b.key==='Mid'?'c':'b'),
+    d:`${pct(b.rows.length,hqA.length)} of HQ &middot; F <b>${b.rows.filter(r=>r.gender==='Female').length}</b>`})));
+  const bMax=Math.max(...bands.map(b=>b.rows.length),1);
+  table('#tBandTbl',[
+    {h:'Band',f:b=>`<span class="chip" style="background:${BCOL[b.key]||C.grey2};color:${b.key==='Unbanded'?C.ink:'#fff'}">${esc(b.key)}</span>`},
+    {h:'Headcount',n:1,f:b=>`${fmtN(b.rows.length)}<span class="bar"><i style="width:${b.rows.length/bMax*100}%"></i></span>`},
+    {h:'% of HQ',n:1,f:b=>pct(b.rows.length,hqA.length)},
+    {h:'Male',n:1,f:b=>z(b.rows.filter(r=>r.gender==='Male').length)},
+    {h:'Female',n:1,f:b=>z(b.rows.filter(r=>r.gender==='Female').length)},
+    {h:'Female %',n:1,f:b=>pct(b.rows.filter(r=>r.gender==='Female').length,b.rows.length)},
+    {h:'Mgr &amp; above',n:1,f:b=>z(b.rows.filter(r=>MGRPLUS.includes(r.grade)).length)},
+    {h:'Sr Exec',n:1,f:b=>z(b.rows.filter(r=>r.grade==='Senior Executive').length)},
+    {h:'Executive',n:1,f:b=>z(b.rows.filter(r=>r.grade==='Executive').length)},
+    {h:'Trainee',n:1,f:b=>z(b.rows.filter(r=>r.grade==='Management Trainee').length)},
+    {h:'<6M',n:1,f:b=>z(b.rows.filter(r=>r.tb===TORDER[0]).length)},
+    {h:'3Y+',n:1,f:b=>z(b.rows.filter(r=>r.tb===TORDER[3]).length)},
+    {h:'Median Tenure',n:1,f:b=>{const m=med(b.rows.map(r=>r.tenure).filter(x=>x!=null));return m==null?'—':m.toFixed(1)+'y'}},
+    {h:'Median Age',n:1,f:b=>{const m=med(b.rows.map(r=>r.age).filter(x=>x!=null));return m==null?'—':Math.round(m)}},
+    {h:'Departments',n:1,f:b=>fmtN(new Set(b.rows.map(r=>r.dept)).size)},
+    {h:'Annual Cost',n:1,cost:1,f:b=>fmtINR(b.rows.reduce((s,r)=>s+r.ctc,0))}
+  ],bands,{'Band':'TOTAL','Headcount':fmtN(hqA.length),'% of HQ':'100%','Male':fmtN(hqM),'Female':fmtN(hqF),'Female %':pct(hqF,hqA.length),
+    'Mgr &amp; above':fmtN(hqA.filter(r=>MGRPLUS.includes(r.grade)).length),'Sr Exec':fmtN(hqA.filter(r=>r.grade==='Senior Executive').length),
+    'Executive':fmtN(hqA.filter(r=>r.grade==='Executive').length),'Trainee':fmtN(hqA.filter(r=>r.grade==='Management Trainee').length),
+    '<6M':fmtN(hqA.filter(r=>r.tb===TORDER[0]).length),'3Y+':fmtN(hqA.filter(r=>r.tb===TORDER[3]).length),
+    'Median Tenure':hqT!=null?hqT.toFixed(1)+'y':'—','Median Age':(()=>{const m=med(hqA.map(r=>r.age).filter(x=>x!=null));return m==null?'—':Math.round(m)})(),
+    'Departments':fmtN(new Set(hqA.map(r=>r.dept)).size),'Annual Cost':fmtINR(sum(hqA))});
+
+  /* --- grade x department, band x department --- */
+  const hqDepts=agg(hqA,r=>r.dept).sort((a,b)=>b.act-a.act);
+  const gShort=g=>g.replace('Head / GM / DGM','Head/GM/DGM').replace('Management Trainee','Trainee').replace('Assistant Manager','Asst Manager').replace('Senior Manager','Sr Manager').replace('Senior Executive','Sr Executive');
+  const gCols=[{h:'Department',f:r=>`<b>${esc(r.key)}</b>`},{h:'HQ Active',n:1,f:r=>fmtN(r.act)}]
+    .concat(gList.map(g=>({h:gShort(g),n:1,f:r=>z(r.rows.filter(x=>x.grade===g).length)})));
+  const gFoot={'Department':'TOTAL','HQ Active':fmtN(hqA.length)};
+  gList.forEach(g=>gFoot[gShort(g)]=fmtN(hqA.filter(r=>r.grade===g).length));
+  table('#tGradeDept',gCols,hqDepts,gFoot);
+
+  const bCols=[{h:'Department',f:r=>`<b>${esc(r.key)}</b>`},{h:'HQ Active',n:1,f:r=>fmtN(r.act)}]
+    .concat(bList.map(b=>({h:b,n:1,f:r=>z(r.rows.filter(x=>x.band===b).length)})))
+    .concat([{h:'Senior %',n:1,f:r=>pct(r.rows.filter(x=>x.band==='Senior').length,r.act)}]);
+  const bFoot={'Department':'TOTAL','HQ Active':fmtN(hqA.length),'Senior %':pct(hqA.filter(r=>r.band==='Senior').length,hqA.length)};
+  bList.forEach(b=>bFoot[b]=fmtN(hqA.filter(r=>r.band===b).length));
+  table('#tBandDept',bCols,hqDepts,bFoot);
+
+  chart('cHqDept',hBar(hqDepts.map(d=>d.key),hqDepts.map(d=>d.act),'Active',C.red));
+  let[hl,hd]=counts(hqA,r=>r.tb,TORDER);chart('cHqTenure',vBar(hl,hd,'Employees',hl.map(k=>TCOL[k])));
+
+  const hqSub=agg(hqAll,r=>r.dept+' ▸ '+r.sub).sort((a,b)=>b.act-a.act);
+  table('#tHq',[
+    {h:'Department ▸ Sub-function',f:r=>esc(r.key)},
+    {h:'Active',n:1,f:r=>fmtN(r.act)},{h:'Male',n:1,f:r=>z(r.male)},{h:'Female',n:1,f:r=>z(r.female)},
+    {h:'Female %',n:1,f:r=>pct(r.female,r.act)},
+    {h:'Mgr &amp; above',n:1,f:r=>z(r.rows.filter(x=>x.status==='Active'&&MGRPLUS.includes(x.grade)).length)},
+    {h:'Sr Exec',n:1,f:r=>z(r.rows.filter(x=>x.status==='Active'&&x.grade==='Senior Executive').length)},
+    {h:'Executive',n:1,f:r=>z(r.rows.filter(x=>x.status==='Active'&&x.grade==='Executive').length)},
+    {h:'Senior band',n:1,f:r=>z(r.rows.filter(x=>x.status==='Active'&&x.band==='Senior').length)},
+    {h:'Resigned',n:1,f:r=>z(r.res)},{h:'Median Tenure',n:1,f:medT},
+    {h:'Cost Centre',f:r=>`<span class="mono" style="color:var(--muted)">${esc([...new Set(r.rows.map(x=>x.cc))].slice(0,2).join(', '))}</span>`},
+    {h:'Annual Cost',n:1,cost:1,f:r=>fmtINR(r.ctc)}
+  ],hqSub,{'Department ▸ Sub-function':'TOTAL','Active':fmtN(hqA.length),'Male':fmtN(hqM),'Female':fmtN(hqF),'Female %':pct(hqF,hqA.length),
+    'Mgr &amp; above':fmtN(hqA.filter(r=>MGRPLUS.includes(r.grade)).length),'Sr Exec':fmtN(hqA.filter(r=>r.grade==='Senior Executive').length),
+    'Executive':fmtN(hqA.filter(r=>r.grade==='Executive').length),'Senior band':fmtN(hqA.filter(r=>r.band==='Senior').length),
+    'Resigned':fmtN(hqAll.length-hqA.length),'Median Tenure':hqT!=null?hqT.toFixed(1)+'y':'—','Cost Centre':'','Annual Cost':fmtINR(costHQ)});
+
+  /* ---------------- PANEL 3 : OFFLINE RETAIL ---------------- */
+  const oM=offA.filter(r=>r.gender==='Male').length,oF=offA.filter(r=>r.gender==='Female').length;
+  const oT=med(offA.map(r=>r.tenure).filter(x=>x!=null));
+  const live=stores.filter(s=>s.act>0).length,hk=offA.filter(r=>/HOUSEKEEP/.test(r.sub)).length;
+  const k3=[
+    {k:'Store Headcount',v:fmtN(offA.length),t:'a',d:`${pct(offA.length,act.length)} of company`},
+    {k:'Live Stores',v:fmtN(live),t:'b',d:`Avg <b>${(offA.length/(live||1)).toFixed(1)}</b> per store`},
+    {k:'Male',v:fmtN(oM),t:'b',d:pct(oM,offA.length)+' of store staff'},
+    {k:'Female',v:fmtN(oF),t:'c',d:pct(oF,offA.length)+' of store staff'},
+    {k:'Resigned',v:fmtN(offAll.length-offA.length),t:'b',d:`Exit rate <b>${pct(offAll.length-offA.length,offAll.length)}</b>`},
+    {k:'Median Tenure',v:oT!=null?oT.toFixed(1)+'y':'—',t:'a',d:`<b>${fmtN(offA.filter(r=>r.tb===TORDER[0]).length)}</b> under 6 months`},
+    {k:'Housekeeping',v:fmtN(hk),t:'c',d:`${pct(hk,offA.length)} of store staff`}
+  ];
+  if(CTC_OK)k3.push({k:'Manning Cost',v:fmtINR(costRT),t:'a',d:`Avg/store <b>${fmtINR(live?costRT/live:0)}</b>`});
+  kpi('#k3',k3);
+
+  const topS=stores.slice(0,14);
+  chart('cStoreHC',hBar(topS.map(s=>s.key),topS.map(s=>s.act),'Active',C.red));
+  chart('cStoreGender',stackG(topS.map(s=>s.key),topS.map(s=>s.male),topS.map(s=>s.female)));
+  const roles=agg(offA,r=>r.title).sort((a,b)=>b.act-a.act);
+  chart('cRole',hBar(roles.slice(0,12).map(r=>r.key),roles.slice(0,12).map(r=>r.act),'Active',C.ink));
+  let[sl,sd]=counts(offA,r=>r.tb,TORDER);chart('cStoreTenure',vBar(sl,sd,'Employees',sl.map(k=>TCOL[k])));
+
+  /* --- Store x Job title --- */
+  const roleCols=roles.filter(r=>r.act>0).map(r=>r.key);
+  const liveStores=stores.filter(s=>s.act>0);
+  table('#tStoreRole',[{h:'Store',f:s=>`<b>${esc(s.key)}</b>`},{h:'Total',n:1,f:s=>fmtN(s.act)}]
+    .concat(roleCols.map(rc=>({h:esc(rc),n:1,f:s=>z(s.rows.filter(x=>x.status==='Active'&&x.title===rc).length)}))),
+    liveStores,
+    Object.assign({'Store':'TOTAL','Total':fmtN(offA.length)},
+      Object.fromEntries(roleCols.map(rc=>[esc(rc),fmtN(offA.filter(r=>r.title===rc).length)]))));
+
+  /* --- Store x Experience band --- */
+  const tCols=TORDER.filter(b=>offA.some(r=>r.tb===b));
+  table('#tStoreTen',[{h:'Store',f:s=>`<b>${esc(s.key)}</b>`},{h:'Total',n:1,f:s=>fmtN(s.act)}]
+    .concat(tCols.map(b=>({h:TSHORT[b],n:1,f:s=>z(s.rows.filter(x=>x.status==='Active'&&x.tb===b).length)})))
+    .concat([
+      {h:'Under 6M %',n:1,f:s=>pct(s.rows.filter(x=>x.status==='Active'&&x.tb===TORDER[0]).length,s.act)},
+      {h:'Median Tenure',n:1,f:medT}]),
+    liveStores,
+    Object.assign({'Store':'TOTAL','Total':fmtN(offA.length),
+      'Under 6M %':pct(offA.filter(r=>r.tb===TORDER[0]).length,offA.length),
+      'Median Tenure':oT!=null?oT.toFixed(1)+'y':'—'},
+      Object.fromEntries(tCols.map(b=>[TSHORT[b],fmtN(offA.filter(r=>r.tb===b).length)]))));
+
+  const maxS=Math.max(...stores.map(s=>s.act),1);
+  table('#tStore',[
+    {h:'Store',f:r=>`<b>${esc(r.key)}</b>`},
+    {h:'Headcount',n:1,f:r=>`${fmtN(r.act)}<span class="bar"><i style="width:${r.act/maxS*100}%"></i></span>`},
+    {h:'Male',n:1,f:r=>z(r.male)},{h:'Female',n:1,f:r=>z(r.female)},{h:'Female %',n:1,f:r=>pct(r.female,r.act)},
+    {h:'<6M',n:1,f:r=>z(r.rows.filter(x=>x.status==='Active'&&x.tb===TORDER[0]).length)},
+    {h:'6M–1.5Y',n:1,f:r=>z(r.rows.filter(x=>x.status==='Active'&&x.tb===TORDER[1]).length)},
+    {h:'1.5–3Y',n:1,f:r=>z(r.rows.filter(x=>x.status==='Active'&&x.tb===TORDER[2]).length)},
+    {h:'3Y+',n:1,f:r=>z(r.rows.filter(x=>x.status==='Active'&&x.tb===TORDER[3]).length)},
+    {h:'Resigned',n:1,f:r=>z(r.res)},{h:'Exit %',n:1,f:r=>pct(r.res,r.act+r.res)},
+    {h:'Median Tenure',n:1,f:medT},
+    {h:'Manning Cost',n:1,cost:1,f:r=>fmtINR(r.ctc)}
+  ],stores,{'Store':'TOTAL','Headcount':fmtN(offA.length),'Male':fmtN(oM),'Female':fmtN(oF),'Female %':pct(oF,offA.length),
+    '<6M':fmtN(offA.filter(r=>r.tb===TORDER[0]).length),'6M–1.5Y':fmtN(offA.filter(r=>r.tb===TORDER[1]).length),
+    '1.5–3Y':fmtN(offA.filter(r=>r.tb===TORDER[2]).length),'3Y+':fmtN(offA.filter(r=>r.tb===TORDER[3]).length),
+    'Resigned':fmtN(offAll.length-offA.length),'Exit %':pct(offAll.length-offA.length,offAll.length),
+    'Median Tenure':oT!=null?oT.toFixed(1)+'y':'—','Manning Cost':fmtINR(costRT)});
+
+  /* ---------------- PANEL 4 : COST ---------------- */
+  const deptAllCost=agg(all,r=>r.dept).sort((a,b)=>b.ctc-a.ctc);
+  const subAllCost=agg(all,r=>r.dept+' ▸ '+r.sub).sort((a,b)=>b.ctc-a.ctc);
+  const kCost = CTC_OK ? [
+    {k:'Total Annual Cost',v:fmtINR(costAll),t:'a',d:`${fmtN(all.length)} records, incl. resignees`},
+    {k:'Active Only',v:fmtINR(costAct),t:'c',d:`${pct(costAct,costAll)} of total &middot; ${fmtN(act.length)} people`},
+    {k:'Resignee Cost',v:fmtINR(costRes),t:'b',d:`${pct(costRes,costAll)} of total &middot; ${fmtN(res.length)} people`},
+    {k:'HQ Cost',v:fmtINR(costHQ),t:'a',d:`${pct(costHQ,costAll)} &middot; avg ${fmtINR(hqAll.length?costHQ/hqAll.length:0)}`},
+    {k:'Retail Cost',v:fmtINR(costRT),t:'c',d:`${pct(costRT,costAll)} &middot; avg ${fmtINR(offAll.length?costRT/offAll.length:0)}`},
+    {k:'Avg Cost / Head',v:fmtINR(all.length?costAll/all.length:0),t:'b',d:'Across all records'},
+    {k:'Largest Department',v:deptAllCost[0]?fmtINR(deptAllCost[0].ctc):'—',t:'a',d:deptAllCost[0]?`<b>${esc(deptAllCost[0].key)}</b> &middot; ${pct(deptAllCost[0].ctc,costAll)}`:''}
+  ] : [
+    {k:'Records',v:fmtN(all.length),t:'a',d:`${fmtN(act.length)} active &middot; ${fmtN(res.length)} resigned`},
+    {k:'HQ Records',v:fmtN(hqAll.length),t:'b',d:`${fmtN(new Set(hqAll.map(r=>r.dept)).size)} departments`},
+    {k:'Retail Records',v:fmtN(offAll.length),t:'c',d:`${fmtN(stores.length)} locations`},
+    {k:'Departments',v:fmtN(new Set(all.map(r=>r.dept)).size),t:'a',d:`${fmtN(new Set(all.map(r=>r.dept+r.sub)).size)} sub-departments`},
+    {k:'Cost Centres',v:fmtN(new Set(all.map(r=>r.cc)).size),t:'b',d:'From the Cost Center column'}
+  ];
+  kpi('#kCost',kCost);
+  ['cCostDept','cCostSplit'].forEach(id=>{const el=document.getElementById(id);if(el&&el.closest('.card'))el.closest('.card').style.display=CTC_OK?'':'none'});
+  if(CTC_OK){
+    const dTop=deptAllCost.slice(0,12);
+    chart('cCostDept',hBar(dTop.map(d=>d.key),dTop.map(d=>d.ctc),'Annual cost',C.red));
+    chart('cCostSplit',donut(['HQ','Offline Retail'],[costHQ,costRT],[C.ink,C.red]));
+  }
+  table('#tCostDept',[
+    {h:'Department',f:r=>`<b>${esc(r.key)}</b>`},
+    {h:'Records',n:1,f:r=>fmtN(r.rows.length)},
+    {h:'Active',n:1,f:r=>fmtN(r.act)},{h:'Resigned',n:1,f:r=>z(r.res)},
+    {h:'Annual Cost',n:1,cost:1,f:r=>fmtINR(r.ctc)},
+    {h:'Active Cost',n:1,cost:1,f:r=>fmtINR(r.ctcAct)},
+    {h:'Share',n:1,cost:1,f:r=>pct(r.ctc,costAll)},
+    {h:'Avg / Head',n:1,cost:1,f:r=>fmtINR(r.rows.length?r.ctc/r.rows.length:0)},
+    {h:'Cost Centres',f:r=>`<span class="mono" style="color:var(--muted)">${esc([...new Set(r.rows.map(x=>x.cc))].slice(0,3).join(', '))}</span>`}
+  ],deptAllCost,{'Department':'TOTAL','Records':fmtN(all.length),'Active':fmtN(act.length),'Resigned':fmtN(res.length),
+    'Annual Cost':fmtINR(costAll),'Active Cost':fmtINR(costAct),'Share':'100%','Avg / Head':fmtINR(all.length?costAll/all.length:0),'Cost Centres':''});
+  table('#tCostSub',[
+    {h:'Department ▸ Sub-department',f:r=>esc(r.key)},
+    {h:'Records',n:1,f:r=>fmtN(r.rows.length)},
+    {h:'Active',n:1,f:r=>fmtN(r.act)},{h:'Resigned',n:1,f:r=>z(r.res)},
+    {h:'Annual Cost',n:1,cost:1,f:r=>fmtINR(r.ctc)},
+    {h:'Active Cost',n:1,cost:1,f:r=>fmtINR(r.ctcAct)},
+    {h:'Share',n:1,cost:1,f:r=>pct(r.ctc,costAll)},
+    {h:'Avg / Head',n:1,cost:1,f:r=>fmtINR(r.rows.length?r.ctc/r.rows.length:0)},
+    {h:'Location',f:r=>esc(r.meta.loc)}
+  ],subAllCost,{'Department ▸ Sub-department':'TOTAL','Records':fmtN(all.length),'Active':fmtN(act.length),'Resigned':fmtN(res.length),
+    'Annual Cost':fmtINR(costAll),'Active Cost':fmtINR(costAct),'Share':'100%','Avg / Head':fmtINR(all.length?costAll/all.length:0),'Location':''});
+  table('#tCostStore',[
+    {h:'Store',f:r=>`<b>${esc(r.key)}</b>`},
+    {h:'Records',n:1,f:r=>fmtN(r.rows.length)},
+    {h:'Active',n:1,f:r=>fmtN(r.act)},{h:'Resigned',n:1,f:r=>z(r.res)},
+    {h:'Annual Cost',n:1,cost:1,f:r=>fmtINR(r.ctc)},
+    {h:'Active Cost',n:1,cost:1,f:r=>fmtINR(r.ctcAct)},
+    {h:'Share of retail',n:1,cost:1,f:r=>pct(r.ctc,costRT)},
+    {h:'Avg / Head',n:1,cost:1,f:r=>fmtINR(r.rows.length?r.ctc/r.rows.length:0)}
+  ],stores,{'Store':'TOTAL','Records':fmtN(offAll.length),'Active':fmtN(offA.length),'Resigned':fmtN(offAll.length-offA.length),
+    'Annual Cost':fmtINR(costRT),'Active Cost':fmtINR(sum(offA)),'Share of retail':'100%','Avg / Head':fmtINR(offAll.length?costRT/offAll.length:0)});
+
+  $('#footStamp').textContent=fmtN(ROWS.length)+' records';
+}
+
+/* ================= LOAD ================= */
+function setStatus(c,t){$('#statusDot').className='dot '+c;$('#statusTxt').textContent=t}
+function showErr(m){const e=$('#errBox');e.className='err on';e.innerHTML=m}
+let LAST_SYNC=null, LAST_LABEL='';
+const syncStr=d=>d?d.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}):'never';
+function paintSync(){
+  const s=syncStr(LAST_SYNC);
+  $('#footSync').textContent = LAST_SYNC ? 'Last synced '+s : '';
+  if(LAST_SYNC) setStatus('', `${LAST_LABEL} · ${fmtN(ROWS.length)} records · Last synced ${s}`);
+}
+function loadCSV(t,label){
+  try{ROWS=parseRows(t);
+    if(!ROWS.length){showErr('<b>No rows found.</b> Make sure row 1 of the sheet is the header row.');return}
+    if(label!=='Offline snapshot') $('#errBox').className='err';
+    render();
+    LAST_SYNC=new Date(); LAST_LABEL=label; paintSync();
+  }catch(e){setStatus('err','Parse failed');showErr('<b>Could not read the data:</b> '+esc(e.message))}
+}
+/* Accepts EITHER a published CSV link OR the normal sheet URL from the address bar. */
+function toCsvUrl(u){
+  u=String(u||'').trim();
+  if(/output=csv|tqx=out:csv/.test(u)) return u;
+  if(/\/spreadsheets\/d\/e\//.test(u)) return u;
+  const m=u.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]{20,})/);
+  if(m){
+    const gid=(u.match(/[#&?]gid=(\d+)/)||[])[1];
+    return `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv`+(gid?`&gid=${gid}`:'');
+  }
+  return u;
+}
+async function loadFromUrl(raw){
+  const u=toCsvUrl(raw);
+  setStatus('wait','Fetching from Google Sheets…');
+  const isFile = location.protocol === 'file:';
+  try{const r=await fetch(u+(u.includes('?')?'&':'?')+'t='+Date.now());
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    let txt=await r.text();
+    if(/^\s*\/\*O_o\*\//.test(txt)) throw new Error('Sheet is not readable — set sharing to "Anyone with the link → Viewer".');
+    if(/^\s*</.test(txt)) throw new Error('Google returned an HTML page instead of CSV — the link points at the wrong tab or the sheet is private.');
+    loadCSV(txt,'Live sheet');
+  }catch(e){
+    const msg=String(e.message||e);
+    if(!ROWS.length){ try{ loadCSV(EMBEDDED,'Offline snapshot'); }catch(_){} }
+    setStatus('err','Sheet fetch failed — showing offline snapshot');
+    if(isFile){
+      showErr('<b>You opened this file directly from your computer (file://), so the browser blocks the request to Google.</b><br><br>'+
+        'Push it to GitHub Pages, or run <span class="mono">python -m http.server 8000</span> in this folder and open <span class="mono">http://localhost:8000</span>.<br><br>'+
+        'Or open <b>&#9881; admin settings</b> and paste the CSV text straight into the second box.');
+    } else if(/404/.test(msg)){
+      showErr('<b>Google says that link does not exist (404).</b> The dashboard and the network are fine — the URL itself is dead.<br><br>'+
+        '<b>Fastest fix:</b> open your sheet, set <b>Share &rarr; Anyone with the link &rarr; Viewer</b>, copy the URL from the address bar and paste it into <b>&#9881; admin settings</b>. This page converts it automatically — no publishing needed.');
+    } else {
+      showErr('<b>Could not reach the sheet.</b> '+esc(msg)+'<br><br>Check that the sheet is shared with <b>Anyone with the link</b>, and that the link points at the tab holding your data.');
+    }
+  }
+}
+function savedUrl(){try{return localStorage.getItem(LS_KEY)||''}catch(e){return ''}}
+function saveUrl(u){try{u?localStorage.setItem(LS_KEY,u):localStorage.removeItem(LS_KEY)}catch(e){}}
+let ACTIVE_URL = savedUrl() || CSV_URL;
+if(ACTIVE_URL)loadFromUrl(ACTIVE_URL);
+else{loadCSV(EMBEDDED,'Embedded snapshot');setStatus('wait','No sheet linked — open admin settings to add one')}
+
+/* ================= UI ================= */
+$$('.tab').forEach(b=>b.onclick=()=>{
+  $$('.tab').forEach(x=>x.setAttribute('aria-selected','false'));b.setAttribute('aria-selected','true');
+  $$('.panel').forEach(p=>p.classList.remove('on'));$('#'+b.dataset.p).classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'})});
+$$('.expand').forEach(b=>b.onclick=()=>{const cfg=CFGS[b.dataset.c];if(!cfg)return;
+  $('#ovChartTitle').textContent=b.closest('.card-h').querySelector('h3').textContent;
+  $('#ovChart').classList.add('on');if(CHARTS.big)CHARTS.big.destroy();
+  CHARTS.big=new Chart($('#bigChart'),JSON.parse(JSON.stringify({type:cfg.type,data:cfg.data,options:cfg.options})))});
+$$('[data-close]').forEach(b=>b.onclick=()=>$$('.ov').forEach(o=>o.classList.remove('on')));
+$$('.ov').forEach(o=>o.onclick=e=>{if(e.target===o)o.classList.remove('on')});
+$('#btnPrint').onclick=()=>window.print();
+
+let devUnlocked=false;
+function openEdit(){$('#csvUrl').value=ACTIVE_URL;$('#ovEdit').classList.add('on')}
+$('#btnEdit').onclick=()=>{
+  if(devUnlocked){openEdit();return}
+  $('#userIn').value='';$('#passIn').value='';$('#passMsg').style.display='none';
+  $('#ovPass').classList.add('on');setTimeout(()=>$('#userIn').focus(),80);
+};
+function tryUnlock(){
+  const u=$('#userIn').value.trim().toUpperCase(), p=$('#passIn').value;
+  if(u===ADMIN_USER.toUpperCase() && p===ADMIN_PASSWORD){devUnlocked=true;$('#ovPass').classList.remove('on');openEdit()}
+  else{$('#passMsg').style.display='block';$('#passIn').value='';$('#passIn').focus()}
+}
+$('#passGo').onclick=tryUnlock;
+$('#userIn').onkeydown=e=>{if(e.key==='Enter')$('#passIn').focus()};
+$('#passIn').onkeydown=e=>{if(e.key==='Enter')tryUnlock()};
+$('#applyData').onclick=()=>{const u=$('#csvUrl').value.trim(),p=$('#csvPaste').value.trim();
+  $('#ovEdit').classList.remove('on');
+  if(p){loadCSV(p,'Pasted data');return}
+  if(u){ACTIVE_URL=u;saveUrl(u===CSV_URL?'':u);loadFromUrl(u)}};
+$('#resetData').onclick=()=>{saveUrl('');ACTIVE_URL=CSV_URL;$('#csvUrl').value=CSV_URL;
+  $('#ovEdit').classList.remove('on');loadFromUrl(CSV_URL)};
+$('#btnReload').onclick=()=>{ACTIVE_URL?loadFromUrl(ACTIVE_URL):loadCSV(EMBEDDED,'Embedded snapshot')};
+
+const panels=['p1','p2','p3','p4'];let slide=0;
+function showSlide(){$$('.panel').forEach(p=>p.classList.remove('show-slide'));
+  $('#'+panels[slide]).classList.add('show-slide');$('#pNum').textContent=(slide+1)+' / '+panels.length;window.scrollTo({top:0})}
+$('#btnPresent').onclick=()=>{document.body.classList.add('present');
+  const cur=$$('.panel.on')[0];slide=Math.max(0,panels.indexOf(cur?cur.id:'p1'));showSlide()};
+$('#pExit').onclick=()=>{document.body.classList.remove('present');$$('.panel').forEach(p=>p.classList.remove('show-slide'))};
+$('#pNext').onclick=()=>{slide=(slide+1)%panels.length;showSlide()};
+$('#pPrev').onclick=()=>{slide=(slide+panels.length-1)%panels.length;showSlide()};
+document.onkeydown=e=>{
+  if(e.key==='Escape'){$$('.ov').forEach(o=>o.classList.remove('on'));if(document.body.classList.contains('present'))$('#pExit').click()}
+  if(!document.body.classList.contains('present'))return;
+  if(e.key==='ArrowRight'||e.key===' ')$('#pNext').click();
+  if(e.key==='ArrowLeft')$('#pPrev').click()};
 </script>
 </body>
 </html>
